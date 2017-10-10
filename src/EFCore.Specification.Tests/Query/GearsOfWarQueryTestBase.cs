@@ -3081,6 +3081,63 @@ namespace Microsoft.EntityFrameworkCore.Query
             }
         }
 
+
+        [ConditionalFact]
+        public virtual void BasicInclude()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = ctx.Gears.Where(g => g.Nickname != "Marcus").Include(g => g.Weapons);
+                var result = query.ToList();
+            }
+        }
+
+        [ConditionalFact]
+        public virtual void BasicProjection()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = ctx.Gears.Where(g => g.Nickname != "Marcus").Select(g => g.Weapons.Where(w => w.IsAutomatic || w.Name != "foo"));
+                var result = query.ToList();
+            }
+        }
+
+
+        [ConditionalFact]
+        public virtual void BasicProjectionNested()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = ctx.Gears.Where(g => g.Nickname != "Marcus").Select(g => g.Squad.Missions.Where(m => m.MissionId != 17));
+                var result = query.ToList();
+            }
+        }
+
+
+        [ConditionalFact]
+        public virtual void BasicProjectionAggregate()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = ctx.Gears.Where(g => g.Nickname != "Marcus").Select(g => g.Weapons.Count());
+                var result = query.ToList();
+            }
+        }
+
+
+
+        [ConditionalFact]
+        public virtual void BasicProjectionWithSelect()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = ctx.Gears.Where(g => g.Nickname != "Marcus").Select(g => g.Weapons.Select(w => w.Name).ToList());
+                var result = query.ToList();
+            }
+        }
+
+
+
         protected GearsOfWarContext CreateContext() => Fixture.CreateContext();
 
         protected virtual void ClearLog()

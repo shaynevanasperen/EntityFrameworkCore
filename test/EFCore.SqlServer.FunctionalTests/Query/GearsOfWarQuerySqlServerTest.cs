@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Linq;
 using Microsoft.EntityFrameworkCore.TestUtilities.Xunit;
 using Xunit;
 using Xunit.Abstractions;
@@ -4221,6 +4222,54 @@ FROM [Gears] AS [g]
 WHERE [g].[Discriminator] IN (N'Officer', N'Gear')
 ORDER BY [g].[SquadId], [g].[Nickname]");
         }
+
+        public override void BasicInclude()
+        {
+            base.BasicInclude();
+
+            AssertSql(
+                @"");
+        }
+
+        public override void BasicProjection()
+        {
+            base.BasicProjection();
+
+            AssertSql(
+                @"");
+        }
+
+
+        public override void BasicProjectionNested()
+        {
+            base.BasicProjectionNested();
+
+            AssertSql(
+                @"");
+        }
+
+        public override void BasicProjectionAggregate()
+        {
+            base.BasicProjectionAggregate();
+
+            AssertSql(
+                @"");
+        }
+
+
+
+        public override void BasicProjectionWithSelect()
+        {
+            base.BasicProjectionWithSelect();
+
+            AssertSql(
+                @"");
+        }
+
+
+
+        
+
 
         private void AssertSql(params string[] expected)
             => Fixture.TestSqlLoggerFactory.AssertBaseline(expected);

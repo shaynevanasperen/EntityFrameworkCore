@@ -275,7 +275,7 @@ namespace Microsoft.EntityFrameworkCore.Query
 
             // Rewrite includes/navigations
 
-            RewriteProjectedCollectionNavigationsToIncludes(queryModel);
+            //RewriteProjectedCollectionNavigationsToIncludes(queryModel);
 
             var includeCompiler = new IncludeCompiler(QueryCompilationContext, _querySourceTracingExpressionVisitorFactory);
 
@@ -286,6 +286,9 @@ namespace Microsoft.EntityFrameworkCore.Query
 
             var navigationRewritingExpressionVisitor = _navigationRewritingExpressionVisitorFactory.Create(this);
 
+            navigationRewritingExpressionVisitor.Rewrite(queryModel, parentQueryModel: null);
+
+            // first pass skips chaned navs ending in collections, second pass processed those missing collections
             navigationRewritingExpressionVisitor.Rewrite(queryModel, parentQueryModel: null);
 
             includeCompiler.CompileIncludes(queryModel, TrackResults(queryModel), asyncQuery);
