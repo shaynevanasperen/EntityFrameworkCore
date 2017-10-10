@@ -286,6 +286,9 @@ namespace Microsoft.EntityFrameworkCore.Query
 
             var navigationRewritingExpressionVisitor = _navigationRewritingExpressionVisitorFactory.Create(this);
 
+            navigationRewritingExpressionVisitor.InjectSubqueryToCollectionsInProjection(queryModel);
+            navigationRewritingExpressionVisitor.MarkCorrelatedCollections(queryModel);
+
             navigationRewritingExpressionVisitor.Rewrite(queryModel, parentQueryModel: null);
 
             // first pass skips chaned navs ending in collections, second pass processed those missing collections
