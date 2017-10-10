@@ -82,8 +82,131 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     return methodCallExpression.Update(methodCallExpression.Object, newArguments);
                 }
 
+                if (typeof(IQueryBuffer).GetTypeInfo()
+                    .IsAssignableFrom(methodCallExpression.Object?.Type.GetTypeInfo())
+                    && methodCallExpression.Method.Name.StartsWith(nameof(IQueryBuffer.MaterializeCorrelatedSubquery), StringComparison.Ordinal))
+                {
+                    var lambaArgument = methodCallExpression.Arguments[3];
+                    var convertExpression = lambaArgument as UnaryExpression;
+
+                    var subQueryExpression
+                        = (SubQueryExpression)
+                        ((LambdaExpression)(convertExpression?.Operand ?? lambaArgument))
+                        .Body.RemoveConvert();
+
+                    var navigation
+                        = (INavigation)
+                        ((ConstantExpression)methodCallExpression.Arguments[1])
+                        .Value;
+
+                    Rewrite2(subQueryExpression.QueryModel, navigation);
+
+                }
+
                 return base.VisitMethodCall(methodCallExpression);
             }
+
+            private void Rewrite2(QueryModel collectionQueryModel, INavigation navigation)
+            {
+                var querySourceReferenceFindingExpressionTreeVisitor
+                    = new QuerySourceReferenceFindingExpressionTreeVisitor();
+
+                //var whereClause = collectionQueryModel.BodyClauses
+                //    .OfType<WhereClause>()
+                //    .Single();
+
+                //whereClause.TransformExpressions(querySourceReferenceFindingExpressionTreeVisitor.Visit);
+
+                //collectionQueryModel.BodyClauses.Remove(whereClause);
+
+                var prune = collectionQueryModel.BodyClauses.OfType<WhereClause>().Single(c => c.Predicate is NullConditionalEqualExpression);
+
+                prune.TransformExpressions(querySourceReferenceFindingExpressionTreeVisitor.Visit);
+
+                collectionQueryModel.BodyClauses.Remove(prune);
+
+
+                _queryCompilationContext.AddQuerySourceRequiringMaterialization(collectionQueryModel.MainFromClause);
+
+
+                var parentQuerySourceReferenceExpression
+                    = querySourceReferenceFindingExpressionTreeVisitor.QuerySourceReferenceExpression;
+
+                var parentQuerySource = parentQuerySourceReferenceExpression.ReferencedQuerySource;
+
+                BuildParentOrderings(
+                    _parentQueryModel,
+                    navigation,
+                    parentQuerySourceReferenceExpression,
+                    ParentOrderings);
+
+                var querySourceMapping = new QuerySourceMapping();
+                var clonedParentQueryModel = _parentQueryModel.Clone(querySourceMapping);
+                _queryCompilationContext.UpdateMapping(querySourceMapping);
+
+                _queryCompilationContext.CloneAnnotations(querySourceMapping, clonedParentQueryModel);
+
+                var clonedParentQuerySourceReferenceExpression
+                    = (QuerySourceReferenceExpression)querySourceMapping.GetExpression(parentQuerySource);
+
+                var clonedParentQuerySource
+                    = clonedParentQuerySourceReferenceExpression.ReferencedQuerySource;
+
+                AdjustPredicate(
+                    clonedParentQueryModel,
+                    clonedParentQuerySource,
+                    clonedParentQuerySourceReferenceExpression);
+
+                clonedParentQueryModel.SelectClause
+                    = new SelectClause(Expression.Default(typeof(AnonymousObject)));
+
+                var subQueryProjection = new List<Expression>();
+
+                var lastResultOperator = ProcessResultOperators(clonedParentQueryModel);
+
+                clonedParentQueryModel.ResultTypeOverride
+                    = typeof(IQueryable<>).MakeGenericType(clonedParentQueryModel.SelectClause.Selector.Type);
+
+                var parentItemName
+                    = parentQuerySource.HasGeneratedItemName()
+                        ? navigation.DeclaringEntityType.DisplayName()[0].ToString().ToLowerInvariant()
+                        : parentQuerySource.ItemName;
+
+                collectionQueryModel.MainFromClause.ItemName = $"{parentItemName}.{navigation.Name}";
+
+                var collectionQuerySourceReferenceExpression
+                    = new QuerySourceReferenceExpression(collectionQueryModel.MainFromClause);
+
+                var joinQuerySourceReferenceExpression
+                    = CreateJoinToParentQuery(
+                        clonedParentQueryModel,
+                        clonedParentQuerySourceReferenceExpression,
+                        collectionQuerySourceReferenceExpression,
+                        navigation.ForeignKey,
+                        collectionQueryModel,
+                        subQueryProjection);
+
+                ApplyParentOrderings(
+                    ParentOrderings,
+                    clonedParentQueryModel,
+                    querySourceMapping,
+                    lastResultOperator);
+
+                LiftOrderBy(
+                    clonedParentQuerySource,
+                    joinQuerySourceReferenceExpression,
+                    clonedParentQueryModel,
+                    collectionQueryModel,
+                    subQueryProjection);
+
+                clonedParentQueryModel.SelectClause.Selector
+                    = Expression.New(
+                        AnonymousObject.AnonymousObjectCtor,
+                        Expression.NewArrayInit(
+                            typeof(object),
+                            subQueryProjection));
+            }
+
 
             private void Rewrite(QueryModel collectionQueryModel, INavigation navigation)
             {
