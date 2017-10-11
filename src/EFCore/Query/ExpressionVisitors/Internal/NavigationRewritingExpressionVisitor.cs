@@ -1722,8 +1722,8 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                             {
                                 var collectionNavigation = properties.OfType<INavigation>().SingleOrDefault(n => n.IsCollection());
 
-                                return properties.Count == 1 && collectionNavigation != null // TODO: no navigation chaining for now
-                                    ? CorrelateSubquery(new QuerySourceReferenceExpression(querySource), collectionNavigation, expression)
+                                return properties.Count == 1 && collectionNavigation != null
+                                    ? CorrelateSubquery2(new QuerySourceReferenceExpression(querySource), collectionNavigation, expression)
                                     : default;
                             });
 
@@ -1764,10 +1764,54 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                 }
 
 
+                private static MethodInfo _correlateSubqueryMethodInfo = typeof(IQueryBuffer).GetMethod(nameof(IQueryBuffer.CorrelateSubquery));
+
+                private Expression CorrelateSubquery2(QuerySourceReferenceExpression outerExpression, INavigation collectionNavigation, SubQueryExpression subQueryExpression)
+                {
+                    var subQueryModel = subQueryExpression.QueryModel;
+
+                    var outerKey = BuildKeyAccess(collectionNavigation.ForeignKey.PrincipalKey.Properties, outerExpression);
+                    var innerKey = BuildKeyAccess(collectionNavigation.ForeignKey.Properties, new QuerySourceReferenceExpression(subQueryModel.MainFromClause));
+                    var correlationnPredicate = CreateCorrelationPredicate(collectionNavigation);
+
+                    var subQueryResultElementType = subQueryModel.SelectClause.Selector.Type;
+
+                    var kvp = typeof(KeyValuePair<,>).MakeGenericType(subQueryResultElementType, typeof(AnonymousObject));
+                    var kvpCtor = kvp.GetTypeInfo().DeclaredConstructors.FirstOrDefault();
+
+                    subQueryModel.SelectClause.Selector = Expression.New(kvpCtor, subQueryModel.SelectClause.Selector, innerKey);
+                    subQueryModel.ResultTypeOverride = typeof(IEnumerable<>).MakeGenericType(subQueryModel.SelectClause.Selector.Type);
+
+
+                    var arguments = new List<Expression>
+                    {
+                        Expression.Constant(1), // TODO: fix this!
+                        Expression.Constant(collectionNavigation),
+                        outerKey,
+                        Expression.Lambda(new SubQueryExpression(subQueryModel)), 
+                        correlationnPredicate
+                    };
+
+                    var generic = _correlateSubqueryMethodInfo.MakeGenericMethod(subQueryResultElementType);
+
+                    var result = Expression.Call(
+                        Expression.Property(
+                            EntityQueryModelVisitor.QueryContextParameter,
+                            nameof(QueryContext.QueryBuffer)),
+                        generic,
+                        arguments);
+
+                    // TODO: needed?
+                    var resultCollectionType = collectionNavigation.GetCollectionAccessor().CollectionType;
+
+                    return resultCollectionType.GetTypeInfo().IsGenericType && resultCollectionType.GetGenericTypeDefinition() == typeof(ICollection<>)
+                        ? (Expression)result
+                        : Expression.Convert(result, resultCollectionType);
+                }
+
                 private Expression CorrelateSubquery(QuerySourceReferenceExpression outerExpression, INavigation collectionNavigation, Expression subqueryExpression)
                 {
                     var outerKey = BuildOuterKey(collectionNavigation, outerExpression);
-
 
                     var correlationnPredicate = TryCreateCorrelationPredicate(collectionNavigation.DeclaringEntityType.ClrType, collectionNavigation);
 
@@ -1847,7 +1891,16 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
 
 
 
+                private static Expression BuildKeyAccess(IEnumerable<IProperty> keyProperties, Expression qsre)
+                {
+                    var keyAccessExpressions = keyProperties.Select(p => Expression.MakeMemberAccess(qsre, p.GetMemberInfo(forConstruction: false, forSet: false))).ToArray();
 
+                    return Expression.New(
+                        AnonymousObject.AnonymousObjectCtor,
+                        Expression.NewArrayInit(
+                            typeof(object),
+                            keyAccessExpressions.Select(k => Expression.Convert(k, typeof(object)))));
+                }
 
                 private static Expression BuildOuterKey(INavigation navigation, Expression outerQsre)
                 {
@@ -1861,6 +1914,59 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                         Expression.NewArrayInit(
                             typeof(object),
                             pks.Select(k => Expression.Convert(k, typeof(object)))));
+                }
+
+                private static Expression CreateCorrelationPredicate(INavigation navigation)
+                {
+                    var foreignKey = navigation.ForeignKey;
+                    var primaryKeyProperties = foreignKey.PrincipalKey.Properties;
+                    var foreignKeyProperties = foreignKey.Properties;
+
+                    var outerKeyParameter = Expression.Parameter(typeof(AnonymousObject), "o");
+                    var innerKeyParameter = Expression.Parameter(typeof(AnonymousObject), "i");
+
+                    return Expression.Lambda(
+                        primaryKeyProperties
+                            .Select((pk, i) => new { pk, i })
+                            .Zip(
+                                foreignKeyProperties,
+                                (outer, inner) =>
+                                {
+                                    Expression outerKeyAccess =
+                                        Expression.Call(
+                                            outerKeyParameter,
+                                            AnonymousObject.GetValueMethodInfo,
+                                            Expression.Constant(outer.i));
+
+                                    Expression innerKeyAccess =
+                                        Expression.Call(
+                                            innerKeyParameter,
+                                            AnonymousObject.GetValueMethodInfo,
+                                            Expression.Constant(outer.i));
+
+                                    Expression equalityExpression;
+
+                                    //if (typeof(IStructuralEquatable).GetTypeInfo()
+                                    //    .IsAssignableFrom(pkMemberAccess.Type.GetTypeInfo()))
+                                    //{
+                                    //    equalityExpression
+                                    //        = Expression.Call(_structuralEqualsMethod, pkMemberAccess, fkMemberAccess);
+                                    //}
+                                    //else
+                                    {
+                                        equalityExpression = Expression.Equal(outerKeyAccess, innerKeyAccess);
+                                    }
+
+                                    return inner.ClrType.IsNullableType()
+                                        ? Expression.Condition(
+                                            Expression.Equal(innerKeyAccess, Expression.Default(inner.ClrType)),
+                                            Expression.Constant(false),
+                                            equalityExpression)
+                                        : equalityExpression;
+                                })
+                            .Aggregate((e1, e2) => Expression.AndAlso(e1, e2)),
+                        outerKeyParameter,
+                        innerKeyParameter);
                 }
 
                 private static Expression TryCreateCorrelationPredicate(Type targetType, INavigation navigation)

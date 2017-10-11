@@ -148,6 +148,106 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
         private readonly Dictionary<int, IDisposable> _childCollections
             = new Dictionary<int, IDisposable>(); // IDisposable as IEnumerable/IAsyncEnumerable
 
+
+        // TODO: add overloads for non-composite keys (slash AnonymousObject) and projecting out entire entity without shadow state keys (slash KeyValuePair stuff)
+
+        /// <summary>
+        ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
+        ///     directly from your code. This API may change or be removed in future releases.
+        /// </summary>
+        public virtual IEnumerable<TInner> CorrelateSubquery<TInner>(
+            int childCollectionId,
+            INavigation navigation,
+            AnonymousObject outerKey,
+            Func<IEnumerable<KeyValuePair<TInner, AnonymousObject>>> childCollectionElementFactory,
+            Func<AnonymousObject, AnonymousObject, bool> correlationnPredicate)
+        {
+            IDisposable untypedEnumerator = null;
+            IEnumerator<KeyValuePair<TInner, AnonymousObject>> enumerator = null;
+
+            if (childCollectionId == -1
+                || !_childCollections.TryGetValue(childCollectionId, out untypedEnumerator))
+            {
+                enumerator = childCollectionElementFactory().GetEnumerator();
+
+                if (!enumerator.MoveNext())
+                {
+                    enumerator.Dispose();
+                    enumerator = null;
+                }
+
+                if (childCollectionId != -1)
+                {
+                    _childCollections.Add(childCollectionId, enumerator);
+                }
+            }
+
+            if (enumerator == null)
+            {
+                if (untypedEnumerator == null)
+                {
+                    var clrCollectionAccessor = navigation.GetCollectionAccessor();
+
+                    var result = clrCollectionAccessor.Create();
+
+                    return (IEnumerable<TInner>)result;
+                }
+
+                enumerator = (IEnumerator<KeyValuePair<TInner, AnonymousObject>>)untypedEnumerator;
+            }
+
+            var inners = new List<TInner>();
+            while (true)
+            {
+                var shouldInclude = correlationnPredicate(outerKey, enumerator.Current.Value);
+                if (shouldInclude)
+                {
+                    inners.Add(enumerator.Current.Key);
+
+                    // TODO: is tracking needed here?
+
+                    //if (tracking)
+                    //{
+                    //    StartTracking(enumerator.Current, targetEntityType);
+                    //}
+
+                    //if (inverseNavigation != null)
+                    //{
+                    //    Debug.Assert(inverseClrPropertySetter != null);
+
+                    //    inverseClrPropertySetter.SetClrValue(enumerator.Current, entity);
+
+                    //    if (tracking)
+                    //    {
+                    //        var internalEntityEntry = _dependencies.StateManager.TryGetEntry(enumerator.Current);
+
+                    //        Debug.Assert(internalEntityEntry != null);
+
+                    //        internalEntityEntry.SetRelationshipSnapshotValue(inverseNavigation, entity);
+                    //    }
+                    //}
+
+                    if (!enumerator.MoveNext())
+                    {
+                        enumerator.Dispose();
+
+                        if (childCollectionId != -1)
+                        {
+                            _childCollections[childCollectionId] = null;
+                        }
+
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return inners;
+        }
+
         /// <summary>
         ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
