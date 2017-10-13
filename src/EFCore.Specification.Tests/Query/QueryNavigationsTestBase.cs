@@ -452,6 +452,19 @@ namespace Microsoft.EntityFrameworkCore.Query
         }
 
         [ConditionalFact]
+        public virtual void Select_collection_navigation_multi_part2()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = from od in ctx.OrderDetails
+                            where od.Order.CustomerID == "ALFKI" || od.Order.CustomerID == "ANTON"
+                            select new { od.Order.Customer.Orders };
+
+                var result = query.ToList();
+            }
+        }
+
+        [ConditionalFact]
         public virtual void Collection_select_nav_prop_any()
         {
             AssertQuery<Customer>(

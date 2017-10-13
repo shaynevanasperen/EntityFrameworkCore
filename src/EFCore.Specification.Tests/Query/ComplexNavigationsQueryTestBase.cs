@@ -3480,6 +3480,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                 elementSorter: e => e.Id);
         }
 
+        // TODO: add more tests like this (for projection, ordering etc) also multiple collections projected, and same collection with different predicates multiple times
+
         [ConditionalFact]
         public virtual void Project_collection_navigation_composed()
         {

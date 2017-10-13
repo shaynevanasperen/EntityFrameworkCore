@@ -520,6 +520,14 @@ INNER JOIN (
 ORDER BY [t].[CustomerID]");
         }
 
+        public override void Select_collection_navigation_multi_part2()
+        {
+            base.Select_collection_navigation_multi_part2();
+
+            AssertSql(
+                @"");
+        }
+
         public override void Collection_select_nav_prop_any()
         {
             base.Collection_select_nav_prop_any();

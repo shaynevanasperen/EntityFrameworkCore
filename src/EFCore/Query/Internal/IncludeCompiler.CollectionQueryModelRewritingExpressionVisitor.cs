@@ -84,7 +84,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
 
                 if (typeof(IQueryBuffer).GetTypeInfo()
                     .IsAssignableFrom(methodCallExpression.Object?.Type.GetTypeInfo())
-                    && methodCallExpression.Method.Name.StartsWith(nameof(IQueryBuffer.MaterializeCorrelatedSubquery), StringComparison.Ordinal))
+                    && methodCallExpression.Method.Name.StartsWith(nameof(IQueryBuffer.CorrelateSubquery), StringComparison.Ordinal))
                 {
                     var lambaArgument = methodCallExpression.Arguments[3];
                     var convertExpression = lambaArgument as UnaryExpression;
@@ -126,7 +126,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                 collectionQueryModel.BodyClauses.Remove(prune);
 
 
-                _queryCompilationContext.AddQuerySourceRequiringMaterialization(collectionQueryModel.MainFromClause);
+                //_queryCompilationContext.AddQuerySourceRequiringMaterialization(collectionQueryModel.MainFromClause);
 
 
                 var parentQuerySourceReferenceExpression
@@ -162,7 +162,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
 
                 var subQueryProjection = new List<Expression>();
 
-                var lastResultOperator = ProcessResultOperators(clonedParentQueryModel);
+                var lastResultOperator = ProcessResultOperators(clonedParentQueryModel, isInclude: false);
 
                 clonedParentQueryModel.ResultTypeOverride
                     = typeof(IQueryable<>).MakeGenericType(clonedParentQueryModel.SelectClause.Selector.Type);
@@ -254,7 +254,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
 
                 var subQueryProjection = new List<Expression>();
 
-                var lastResultOperator = ProcessResultOperators(clonedParentQueryModel);
+                var lastResultOperator = ProcessResultOperators(clonedParentQueryModel, isInclude: true);
 
                 clonedParentQueryModel.ResultTypeOverride
                     = typeof(IQueryable<>).MakeGenericType(clonedParentQueryModel.SelectClause.Selector.Type);
@@ -444,7 +444,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                 }
             }
 
-            private static bool ProcessResultOperators(QueryModel queryModel)
+            private static bool ProcessResultOperators(QueryModel queryModel, bool isInclude)
             {
                 var choiceResultOperator
                     = queryModel.ResultOperators.LastOrDefault() as ChoiceResultOperatorBase;
@@ -475,7 +475,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     orderByClause.Orderings.Add(new Ordering(groupResultOperator.KeySelector, OrderingDirection.Asc));
                 }
 
-                if (queryModel.BodyClauses
+                if (isInclude && queryModel.BodyClauses
                         .Count(
                             bc => bc is AdditionalFromClause
                                   || bc is JoinClause

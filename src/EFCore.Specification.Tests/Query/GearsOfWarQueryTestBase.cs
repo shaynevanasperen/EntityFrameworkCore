@@ -3131,11 +3131,20 @@ namespace Microsoft.EntityFrameworkCore.Query
         {
             using (var ctx = CreateContext())
             {
-                var query = ctx.Gears.Where(g => g.Nickname != "Marcus").Select(g => g.Weapons.Select(w => w.Name).ToList());
+                var query = ctx.Gears.Where(g => g.Nickname != "Marcus").Select(g => g.Weapons.Select(w => w.Name));
                 var result = query.ToList();
             }
         }
 
+        [ConditionalFact]
+        public virtual void BasicProjectionWithSelectAnonymous()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = ctx.Gears.Where(g => g.Nickname != "Marcus").Select(g => g.Weapons.Select(w => new { w.Name }));
+                var result = query.ToList();
+            }
+        }
 
 
         protected GearsOfWarContext CreateContext() => Fixture.CreateContext();
