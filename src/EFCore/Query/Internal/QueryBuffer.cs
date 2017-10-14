@@ -157,13 +157,15 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
         /// </summary>
         public virtual IEnumerable<TInner> CorrelateSubquery<TInner>(
             int childCollectionId,
+            object originQuerySource,
             INavigation navigation,
+            INavigation firstNavigation,
             AnonymousObject outerKey,
-            Func<IEnumerable<KeyValuePair<TInner, AnonymousObject>>> childCollectionElementFactory,
+            Func<IEnumerable<KeyValuePair<KeyValuePair<TInner, AnonymousObject>, AnonymousObject>>> childCollectionElementFactory,
             Func<AnonymousObject, AnonymousObject, bool> correlationnPredicate)
         {
             IDisposable untypedEnumerator = null;
-            IEnumerator<KeyValuePair<TInner, AnonymousObject>> enumerator = null;
+            IEnumerator<KeyValuePair<KeyValuePair<TInner, AnonymousObject>, AnonymousObject>> enumerator = null;
 
             if (childCollectionId == -1
                 || !_childCollections.TryGetValue(childCollectionId, out untypedEnumerator))
@@ -193,16 +195,45 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     return (IEnumerable<TInner>)result;
                 }
 
-                enumerator = (IEnumerator<KeyValuePair<TInner, AnonymousObject>>)untypedEnumerator;
+                enumerator = (IEnumerator<KeyValuePair<KeyValuePair<TInner, AnonymousObject>, AnonymousObject>>)untypedEnumerator;
             }
+
+            var originKeysMap = new Dictionary<AnonymousObject, AnonymousObject>();
 
             var inners = new List<TInner>();
             while (true)
             {
-                var shouldInclude = correlationnPredicate(outerKey, enumerator.Current.Value);
+                var shouldInclude = correlationnPredicate(outerKey, enumerator.Current.Key.Value);
+
                 if (shouldInclude)
                 {
-                    inners.Add(enumerator.Current.Key);
+                    if (originKeysMap.TryGetValue(outerKey, out var foobar))
+                    {
+                        if (enumerator.Current.Value.Equals(foobar))
+                        {
+                            shouldInclude = false;
+                        }
+
+                        // compare
+
+                    }
+                    else
+                    {
+                        originKeysMap[outerKey] = enumerator.Current.Value;
+                    }
+                }
+
+
+                //if (firstOriginElementKey == null
+                //    || firstOriginElementKey.Equals(enumerator.Current.Value))
+                //{
+                //    shouldInclude = false;
+                //}
+
+
+                if (shouldInclude)
+                {
+                    inners.Add(enumerator.Current.Key.Key);
 
                     // TODO: is tracking needed here?
 

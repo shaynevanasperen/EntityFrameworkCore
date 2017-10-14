@@ -90,9 +90,11 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
         /// </summary>
         IEnumerable<TInner> CorrelateSubquery<TInner>(
             int childCollectionId,
+            object originQuerySource,
             INavigation navigation,
+            INavigation firstNavigation,
             AnonymousObject outerKey,
-            Func<IEnumerable<KeyValuePair<TInner, AnonymousObject>>> childCollectionElementFactory,
+            Func<IEnumerable<KeyValuePair<KeyValuePair<TInner, AnonymousObject>, AnonymousObject>>> childCollectionElementFactory,
             Func<AnonymousObject, AnonymousObject, bool> correlationnPredicate);
     }
 }

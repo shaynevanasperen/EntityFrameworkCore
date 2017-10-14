@@ -1048,6 +1048,12 @@ namespace Microsoft.EntityFrameworkCore.Query
             Check.NotNull(selectClause, nameof(selectClause));
             Check.NotNull(queryModel, nameof(queryModel));
 
+            if (selectClause.ToString() == @"select new KeyValuePair`2(new KeyValuePair`2([od.Order.Customer.Orders], new AnonymousObject(new [] {Convert(Property([od.Order.Customer.Orders], ""CustomerID""))})), new AnonymousObject(new [] {[_od.Order.Customer].GetValue(1), [_od.Order.Customer].GetValue(2)}))")
+            {
+
+            }
+
+
             base.VisitSelectClause(selectClause, queryModel);
 
             if (Expression is MethodCallExpression methodCallExpression
@@ -1439,18 +1445,18 @@ namespace Microsoft.EntityFrameworkCore.Query
             var outerShaper = ExtractShaper(outerShapedQuery, 0);
             var innerShaper = ExtractShaper(innerShapedQuery, previousProjectionCount);
 
-            if (innerShaper.Type == typeof(AnonymousObject))
-            {
-                Expression = outerShapedQuery;
-                CurrentParameter = previousParameter;
+            //if (innerShaper.Type == typeof(AnonymousObject))
+            //{
+            //    Expression = outerShapedQuery;
+            //    CurrentParameter = previousParameter;
 
-                foreach (var mapping in previousMapping)
-                {
-                    QueryCompilationContext.QuerySourceMapping
-                        .ReplaceMapping(mapping.Key, mapping.Value);
-                }
-            }
-            else
+            //    foreach (var mapping in previousMapping)
+            //    {
+            //        QueryCompilationContext.QuerySourceMapping
+            //            .ReplaceMapping(mapping.Key, mapping.Value);
+            //    }
+            //}
+            //else
             {
                 var materializerLambda = (LambdaExpression)joinMethodCallExpression.Arguments.Last();
 

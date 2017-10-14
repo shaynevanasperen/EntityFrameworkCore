@@ -1573,8 +1573,8 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
             {
                 selectClause.Selector = _subqueryInjector.Visit(selectClause.Selector);
 
-                var subqueryCorrelatingExpressionVisitor = new SubqueryCorrelatingExpressionVisitor(_queryCompilationContext.CreateQueryModelVisitor(), queryModel);
-                selectClause.Selector = subqueryCorrelatingExpressionVisitor.Visit(selectClause.Selector);
+                //var subqueryCorrelatingExpressionVisitor = new SubqueryCorrelatingExpressionVisitor(_queryCompilationContext.CreateQueryModelVisitor(), queryModel);
+                //selectClause.Selector = subqueryCorrelatingExpressionVisitor.Visit(selectClause.Selector);
 
                 if (_navigationExpansionSubquery)
                 {
@@ -1585,6 +1585,9 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                 var originalType = selectClause.Selector.Type;
 
                 base.VisitSelectClause(selectClause, queryModel);
+
+                var subqueryCorrelatingExpressionVisitor = new SubqueryCorrelatingExpressionVisitor(_queryCompilationContext.CreateQueryModelVisitor(), queryModel);
+                selectClause.Selector = subqueryCorrelatingExpressionVisitor.Visit(selectClause.Selector);
 
                 selectClause.Selector = CompensateForNullabilityDifference(selectClause.Selector, originalType);
             }
@@ -1713,81 +1716,106 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                     return base.VisitMethodCall(node);
                 }
 
+
+
                 protected override Expression VisitExtension(Expression node)
                 {
                     if (node is CorrelatedCollectionMarkingExpression correlatedCollectionMarkingExpression)
                     {
+                        return _queryModelVisitor.BindNavigationPathPropertyExpression(
+                            correlatedCollectionMarkingExpression.Operand.QueryModel.MainFromClause.FromExpression,
+                            (properties, querySource) =>
+                            {
+                                var collectionNavigation = properties.OfType<INavigation>().SingleOrDefault(n => n.IsCollection());
+
+                                return CorrelateSubquery2(
+                                    new QuerySourceReferenceExpression(correlatedCollectionMarkingExpression.OriginQuerySource),
+                                    new QuerySourceReferenceExpression(querySource),
+                                    correlatedCollectionMarkingExpression.FirstNavigation,
+                                    correlatedCollectionMarkingExpression.LastNavigation,
+                                    correlatedCollectionMarkingExpression.Operand);
+
+                                //return properties.Count == 1 && collectionNavigation != null
+                                //    ? CorrelateSubquery2(new QuerySourceReferenceExpression(querySource), collectionNavigation, expression)
+                                //    : default;
+                            });
+
+
+
+
 
                     }
 
                     return base.VisitExtension(node);
                 }
 
+                //protected override Expression VisitSubQuery(SubQueryExpression expression)
+                //{
+                //    var subQueryModel = expression.QueryModel;
+                //    if (subQueryModel.ResultOperators.Count == 0
+                //        && subQueryModel.SelectClause.Selector is QuerySourceReferenceExpression selectorQsre
+                //        && selectorQsre.ReferencedQuerySource == subQueryModel.MainFromClause
+                //        && subQueryModel.MainFromClause.FromExpression is MemberExpression fromMemberExpression)
+                //    {
+                //        var newMemberExpression = _queryModelVisitor.BindNavigationPathPropertyExpression(
+                //            fromMemberExpression,
+                //            (properties, querySource) =>
+                //            {
+                //                var collectionNavigation = properties.OfType<INavigation>().SingleOrDefault(n => n.IsCollection());
 
+                //                return properties.Count == 1 && collectionNavigation != null
+                //                    ? CorrelateSubquery2(new QuerySourceReferenceExpression(querySource), collectionNavigation, expression)
+                //                    : default;
+                //            });
 
+                //        if (newMemberExpression != null)
+                //        {
+                //            return newMemberExpression;
+                //        }
+                //    }
 
-                protected override Expression VisitSubQuery(SubQueryExpression expression)
-                {
-                    var subQueryModel = expression.QueryModel;
-                    if (subQueryModel.ResultOperators.Count == 0
-                        && subQueryModel.SelectClause.Selector is QuerySourceReferenceExpression selectorQsre
-                        && selectorQsre.ReferencedQuerySource == subQueryModel.MainFromClause
-                        && subQueryModel.MainFromClause.FromExpression is MemberExpression fromMemberExpression)
-                    {
-                        var newMemberExpression = _queryModelVisitor.BindNavigationPathPropertyExpression(
-                            fromMemberExpression,
-                            (properties, querySource) =>
-                            {
-                                var collectionNavigation = properties.OfType<INavigation>().SingleOrDefault(n => n.IsCollection());
+                //    if (subQueryModel.ResultOperators.Count == 0)
+                //        //&& (subQueryModel.MainFromClause.FromExpression is MemberExpression 
+                //        //    || (subQueryModel.MainFromClause.FromExpression as MethodCallExpression)?.IsEFProperty()))
+                //    {
+                //        var querySourceReferenceFindingExpressionTreeVisitor
+                //            = new QuerySourceReferenceFindingExpressionTreeVisitor();
 
-                                return properties.Count == 1 && collectionNavigation != null
-                                    ? CorrelateSubquery2(new QuerySourceReferenceExpression(querySource), collectionNavigation, expression)
-                                    : default;
-                            });
+                //        querySourceReferenceFindingExpressionTreeVisitor.Visit(subQueryModel.SelectClause.Selector);
+                //        if (querySourceReferenceFindingExpressionTreeVisitor.QuerySourceReferenceExpression.ReferencedQuerySource == subQueryModel.MainFromClause)
+                //        {
+                //            var newMemberExpression = _queryModelVisitor.BindNavigationPathPropertyExpression(
+                //            subQueryModel.MainFromClause.FromExpression,
+                //            (properties, querySource) =>
+                //            {
+                //                var collectionNavigation = properties.OfType<INavigation>().SingleOrDefault(n => n.IsCollection());
 
-                        if (newMemberExpression != null)
-                        {
-                            return newMemberExpression;
-                        }
-                    }
+                //                return properties.Count == 1 && collectionNavigation != null // TODO: no navigation chaining for now
+                //                    ? CorrelateSubquery2(new QuerySourceReferenceExpression(querySource), collectionNavigation, expression)
+                //                    : default;
+                //            });
 
-                    if (subQueryModel.ResultOperators.Count == 0)
-                        //&& (subQueryModel.MainFromClause.FromExpression is MemberExpression 
-                        //    || (subQueryModel.MainFromClause.FromExpression as MethodCallExpression)?.IsEFProperty()))
-                    {
-                        var querySourceReferenceFindingExpressionTreeVisitor
-                            = new QuerySourceReferenceFindingExpressionTreeVisitor();
+                //            if (newMemberExpression != null)
+                //            {
+                //                return newMemberExpression;
+                //            }
+                //        }
+                //    }
 
-                        querySourceReferenceFindingExpressionTreeVisitor.Visit(subQueryModel.SelectClause.Selector);
-                        if (querySourceReferenceFindingExpressionTreeVisitor.QuerySourceReferenceExpression.ReferencedQuerySource == subQueryModel.MainFromClause)
-                        {
-                            var newMemberExpression = _queryModelVisitor.BindNavigationPathPropertyExpression(
-                            subQueryModel.MainFromClause.FromExpression,
-                            (properties, querySource) =>
-                            {
-                                var collectionNavigation = properties.OfType<INavigation>().SingleOrDefault(n => n.IsCollection());
-
-                                return properties.Count == 1 && collectionNavigation != null // TODO: no navigation chaining for now
-                                    ? CorrelateSubquery2(new QuerySourceReferenceExpression(querySource), collectionNavigation, expression)
-                                    : default;
-                            });
-
-                            if (newMemberExpression != null)
-                            {
-                                return newMemberExpression;
-                            }
-                        }
-                    }
-
-                    return base.VisitSubQuery(expression);
-                }
+                //    return base.VisitSubQuery(expression);
+                //}
 
 
                 private static MethodInfo _correlateSubqueryMethodInfo = typeof(IQueryBuffer).GetMethod(nameof(IQueryBuffer.CorrelateSubquery));
 
 
 
-                private Expression CorrelateSubquery2(QuerySourceReferenceExpression outerExpression, INavigation collectionNavigation, SubQueryExpression subQueryExpression)
+                private Expression CorrelateSubquery2(
+                    QuerySourceReferenceExpression originQuerySourceExpression,
+                    QuerySourceReferenceExpression outerExpression,
+                    INavigation firstNavigation,
+                    INavigation collectionNavigation, 
+                    SubQueryExpression subQueryExpression)
                 {
                     var subQueryModel = subQueryExpression.QueryModel;
 
@@ -1800,14 +1828,29 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                     var kvp = typeof(KeyValuePair<,>).MakeGenericType(subQueryResultElementType, typeof(AnonymousObject));
                     var kvpCtor = kvp.GetTypeInfo().DeclaredConstructors.FirstOrDefault();
 
-                    subQueryModel.SelectClause.Selector = Expression.New(kvpCtor, subQueryModel.SelectClause.Selector, innerKey);
+                    var kvp2 = typeof(KeyValuePair<,>).MakeGenericType(kvp, typeof(AnonymousObject));
+                    var kvp2Ctor = kvp2.GetTypeInfo().DeclaredConstructors.FirstOrDefault();
+
+                    var originEntityType = _queryModelVisitor.QueryCompilationContext.Model.FindEntityType(originQuerySourceExpression.Type);
+                    var originKey = BuildKeyAccess(originEntityType.FindDeclaredPrimaryKey().Properties, originQuerySourceExpression);
+
+
+
+                    subQueryModel.SelectClause.Selector = Expression.New(
+                        kvp2Ctor,
+                        Expression.New(kvpCtor, subQueryModel.SelectClause.Selector, innerKey),
+                        originKey);
+
+                    //subQueryModel.SelectClause.Selector = Expression.New(kvpCtor, subQueryModel.SelectClause.Selector, innerKey);
                     subQueryModel.ResultTypeOverride = typeof(IEnumerable<>).MakeGenericType(subQueryModel.SelectClause.Selector.Type);
 
 
                     var arguments = new List<Expression>
                     {
                         Expression.Constant(1), // TODO: fix this!
+                        originQuerySourceExpression,
                         Expression.Constant(collectionNavigation),
+                        Expression.Constant(firstNavigation),
                         outerKey,
                         Expression.Lambda(new SubQueryExpression(subQueryModel)), 
                         correlationnPredicate

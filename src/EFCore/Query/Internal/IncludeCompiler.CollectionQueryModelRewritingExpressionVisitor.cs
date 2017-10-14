@@ -86,7 +86,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     .IsAssignableFrom(methodCallExpression.Object?.Type.GetTypeInfo())
                     && methodCallExpression.Method.Name.StartsWith(nameof(IQueryBuffer.CorrelateSubquery), StringComparison.Ordinal))
                 {
-                    var lambaArgument = methodCallExpression.Arguments[3];
+                    var lambaArgument = methodCallExpression.Arguments[5];
                     var convertExpression = lambaArgument as UnaryExpression;
 
                     var subQueryExpression
@@ -94,19 +94,28 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                         ((LambdaExpression)(convertExpression?.Operand ?? lambaArgument))
                         .Body.RemoveConvert();
 
+                    var originQuerySource = (QuerySourceReferenceExpression)methodCallExpression.Arguments[1];
+
                     var navigation
                         = (INavigation)
-                        ((ConstantExpression)methodCallExpression.Arguments[1])
+                        ((ConstantExpression)methodCallExpression.Arguments[2])
                         .Value;
 
-                    Rewrite2(subQueryExpression.QueryModel, navigation);
+                    Rewrite2(subQueryExpression.QueryModel, navigation, originQuerySource);
+
+                    var newArguments = methodCallExpression.Arguments.ToArray();
+                    newArguments[1] = Expression.Constant(null);
+
+                    return Expression.Call(methodCallExpression.Object, methodCallExpression.Method, newArguments);
+
+
 
                 }
 
                 return base.VisitMethodCall(methodCallExpression);
             }
 
-            private void Rewrite2(QueryModel collectionQueryModel, INavigation navigation)
+            private void Rewrite2(QueryModel collectionQueryModel, INavigation navigation, QuerySourceReferenceExpression originQuerySource)
             {
                 var querySourceReferenceFindingExpressionTreeVisitor
                     = new QuerySourceReferenceFindingExpressionTreeVisitor();
@@ -133,6 +142,8 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     = querySourceReferenceFindingExpressionTreeVisitor.QuerySourceReferenceExpression;
 
                 var parentQuerySource = parentQuerySourceReferenceExpression.ReferencedQuerySource;
+
+                BuildOriginQuerySourceOrderings(_parentQueryModel, originQuerySource, ParentOrderings);
 
                 BuildParentOrderings(
                     _parentQueryModel,
@@ -205,6 +216,158 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                         Expression.NewArrayInit(
                             typeof(object),
                             subQueryProjection));
+
+
+
+                
+
+                var selectorSecondArg = ((NewExpression)collectionQueryModel.SelectClause.Selector).Arguments[1];
+                var innerArguments = ((NewArrayExpression)(((NewExpression)selectorSecondArg).Arguments[0])).Expressions;
+
+
+
+
+                //foreach (var innerArgument in innerArguments)
+                //{
+
+                //    var projectionIndex
+                //         = subQueryProjection
+                //             .FindIndex(
+                //                 e =>
+                //                 {
+                //                     var expressionWithoutConvert = e.RemoveConvert();
+                //                     var projectionExpression = (expressionWithoutConvert as NullConditionalExpression)?.AccessOperation
+                //                                                       ?? expressionWithoutConvert;
+
+                //                     var argumentWithoutConvert = innerArgument.RemoveConvert();
+
+
+                //                     if (projectionExpression is MethodCallExpression projectionMethodCall
+                //                        && argumentWithoutConvert is MethodCallExpression argumentMethodCall) //isproperty
+                //                     {
+                //                         if (projectionMethodCall.Arguments[0] is QuerySourceReferenceExpression projectionQsre
+                //                             && argumentMethodCall.Arguments[0] is QuerySourceReferenceExpression argumentQsre
+                //                             && projectionQsre.ReferencedQuerySource == argumentQsre.ReferencedQuerySource)
+                //                         { 
+                //                         }
+                //                     }
+
+                //                     return _expressionEqualityComparer.Equals(projectionExpression, innerArgument.RemoveConvert());
+
+                //                     //if (projectionExpression is MethodCallExpression methodCall
+                //                     //           && methodCall.Method.IsEFPropertyMethod())
+                //                     //{
+                //                     //    var properyQsre = (QuerySourceReferenceExpression)methodCall.Arguments[0];
+                //                     //    var propertyName = (string)((ConstantExpression)methodCall.Arguments[1]).Value;
+
+                //                     //    return properyQsre.ReferencedQuerySource == memberQsre.ReferencedQuerySource
+                //                     //                  && propertyName == memberExpression.Member.Name;
+                //                     //}
+
+                //                     //if (projectionExpression is MemberExpression projectionMemberExpression)
+                //                     //{
+                //                     //    var projectionMemberQsre = (QuerySourceReferenceExpression)projectionMemberExpression.Expression;
+
+                //                     //    return projectionMemberQsre.ReferencedQuerySource == memberQsre.ReferencedQuerySource
+                //                     //                  && projectionMemberExpression.Member.Name == memberExpression.Member.Name;
+                //                     //}
+
+                //                     //return false;
+                //                 });
+
+
+
+
+
+
+
+                //    //var projectionIndex
+                //    //    = subQueryProjection
+                //    //        .FindIndex(e => _expressionEqualityComparer.Equals(e.RemoveConvert(), innerArgument));
+                //}
+
+
+
+
+
+                var newSelectorSecondArg = CloningExpressionVisitor
+                        .AdjustExpressionAfterCloning(selectorSecondArg, querySourceMapping);
+
+
+                var innerArguments2 = ((NewArrayExpression)(((NewExpression)newSelectorSecondArg).Arguments[0])).Expressions;
+
+                var newInnerArguments2 = new List<Expression>();
+
+                int projectionIndex;
+                foreach (var innerArgument2 in innerArguments2)
+                {
+                    projectionIndex
+                         = subQueryProjection
+                             .FindIndex(
+                                 e =>
+                                 {
+                                     var expressionWithoutConvert = e.RemoveConvert();
+                                     var projectionExpression = (expressionWithoutConvert as NullConditionalExpression)?.AccessOperation
+                                                                       ?? expressionWithoutConvert;
+
+                                     var argumentWithoutConvert = innerArgument2.RemoveConvert();
+
+
+                                     if (projectionExpression is MethodCallExpression projectionMethodCall
+                                        && argumentWithoutConvert is MethodCallExpression argumentMethodCall
+                                        && projectionMethodCall.IsEFProperty()
+                                        && argumentMethodCall.IsEFProperty()
+                                        && projectionMethodCall.Arguments[0] is QuerySourceReferenceExpression projectionQsre
+                                        && argumentMethodCall.Arguments[0] is QuerySourceReferenceExpression argumentQsre
+                                        && projectionQsre.ReferencedQuerySource == argumentQsre.ReferencedQuerySource
+                                        && _expressionEqualityComparer.Equals(projectionMethodCall.Arguments[1], argumentMethodCall.Arguments[1]))
+                                     {
+                                         return true;
+                                     }
+
+                                     return _expressionEqualityComparer.Equals(projectionExpression, innerArgument2.RemoveConvert());
+                                 });
+
+                    if (projectionIndex == -1)
+                    {
+                        throw new InvalidOperationException("this shouldn't happen");
+                    }
+
+                    var newExpression
+                        = Expression.Call(
+                            joinQuerySourceReferenceExpression,
+                            AnonymousObject.GetValueMethodInfo,
+                            Expression.Constant(projectionIndex));
+
+
+                    newInnerArguments2.Add(newExpression);
+
+                    //var projectionIndex2
+                    //    = subQueryProjection
+                    //        .FindIndex(e => _expressionEqualityComparer.Equals(e.RemoveConvert(), innerArgument2.RemoveConvert()));
+                }
+
+
+
+
+
+
+
+
+                var ctor = ((NewExpression)collectionQueryModel.SelectClause.Selector).Constructor;
+
+
+
+
+
+                collectionQueryModel.SelectClause.Selector = Expression.New(
+                    ctor,
+                    ((NewExpression)collectionQueryModel.SelectClause.Selector).Arguments[0],
+                    Expression.New(
+                        AnonymousObject.AnonymousObjectCtor,
+                        Expression.NewArrayInit(
+                            typeof(object),
+                            newInnerArguments2)));
             }
 
 
@@ -325,6 +488,40 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                             || o.Expression is MemberExpression memberExpression
                             && memberExpression.Expression is QuerySourceReferenceExpression memberQuerySourceReferenceExpression
                             && ReferenceEquals(memberQuerySourceReferenceExpression.ReferencedQuerySource, querySourceReferenceExpression.ReferencedQuerySource)
+                            && memberExpression.Member.Equals(property.PropertyInfo)))
+                    {
+                        parentOrderings.Add(new Ordering(propertyExpression, OrderingDirection.Asc));
+                    }
+                }
+            }
+
+            private void BuildOriginQuerySourceOrderings(
+                QueryModel queryModel,
+                QuerySourceReferenceExpression originQsre,
+                ICollection<Ordering> parentOrderings)
+            {
+                var orderings = parentOrderings;
+
+                var orderByClause
+                    = queryModel.BodyClauses.OfType<OrderByClause>().LastOrDefault();
+
+                if (orderByClause != null)
+                {
+                    orderings = orderings.Concat(orderByClause.Orderings).ToArray();
+                }
+
+                var originEntityType = _queryCompilationContext.Model.FindEntityType(originQsre.Type);
+
+                foreach (var property in originEntityType.FindDeclaredPrimaryKey().Properties)
+                {
+                    var propertyExpression = originQsre.CreateEFPropertyExpression(property);
+
+                    if (!orderings.Any(
+                        o =>
+                            _expressionEqualityComparer.Equals(o.Expression, propertyExpression)
+                            || o.Expression is MemberExpression memberExpression
+                            && memberExpression.Expression is QuerySourceReferenceExpression memberQuerySourceReferenceExpression
+                            && ReferenceEquals(memberQuerySourceReferenceExpression.ReferencedQuerySource, originQsre.ReferencedQuerySource)
                             && memberExpression.Member.Equals(property.PropertyInfo)))
                     {
                         parentOrderings.Add(new Ordering(propertyExpression, OrderingDirection.Asc));
@@ -581,6 +778,11 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     var newExpression
                         = CloningExpressionVisitor
                             .AdjustExpressionAfterCloning(ordering.Expression, querySourceMapping);
+
+                    //var foo = (((MethodCallExpression)ordering.Expression).Arguments[0] as QuerySourceReferenceExpression).ReferencedQuerySource;
+                    //var bar = (((MethodCallExpression)newExpression).Arguments[0] as QuerySourceReferenceExpression).ReferencedQuerySource;
+
+
 
                     if (newExpression is MethodCallExpression methodCallExpression
                         && methodCallExpression.Method.IsEFPropertyMethod())
