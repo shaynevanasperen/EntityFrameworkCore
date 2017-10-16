@@ -146,6 +146,19 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors
                 return newExpression;
             }
 
+            if (newExpression.Type == typeof(AnonymousObject2))
+            {
+                var propertyCallExpressions
+                    = ((NewArrayExpression)newExpression.Arguments.Single()).Expressions;
+
+                foreach (var propertyCallExpression in propertyCallExpressions)
+                {
+                    Visit(propertyCallExpression.RemoveConvert());
+                }
+
+                return newExpression;
+            }
+
             var newNewExpression = base.VisitNew(newExpression);
 
             var selectExpression = QueryModelVisitor.TryGetQuery(_querySource);

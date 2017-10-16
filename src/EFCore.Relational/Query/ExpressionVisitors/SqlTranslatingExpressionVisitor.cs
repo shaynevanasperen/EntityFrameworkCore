@@ -664,6 +664,22 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors
                 }
             }
 
+            if (AnonymousObject2.IsGetValueExpression(methodCallExpression, out var querySourceReferenceExpression2))
+            {
+                var selectExpression
+                    = _queryModelVisitor.TryGetQuery(querySourceReferenceExpression2.ReferencedQuerySource);
+
+                if (selectExpression != null)
+                {
+                    var projectionIndex
+                        = (int)((ConstantExpression)methodCallExpression.Arguments.Single()).Value;
+
+                    return selectExpression.BindSubqueryProjectionIndex(
+                        projectionIndex,
+                        querySourceReferenceExpression2.ReferencedQuerySource);
+                }
+            }
+
             return TryBindMemberOrMethodToSelectExpression(
                        methodCallExpression, (expression, visitor, binder)
                            => visitor.BindMethodCallExpression(expression, binder))
