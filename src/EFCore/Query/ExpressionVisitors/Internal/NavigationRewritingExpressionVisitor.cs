@@ -1825,10 +1825,10 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
 
                     var subQueryResultElementType = subQueryModel.SelectClause.Selector.Type;
 
-                    var kvp = typeof(KeyValuePair<,>).MakeGenericType(subQueryResultElementType, typeof(AnonymousObject));
+                    var kvp = typeof(KeyValuePair<,>).MakeGenericType(subQueryResultElementType, typeof(AnonymousObject2));
                     var kvpCtor = kvp.GetTypeInfo().DeclaredConstructors.FirstOrDefault();
 
-                    var kvp2 = typeof(KeyValuePair<,>).MakeGenericType(kvp, typeof(AnonymousObject));
+                    var kvp2 = typeof(KeyValuePair<,>).MakeGenericType(kvp, typeof(AnonymousObject2));
                     var kvp2Ctor = kvp2.GetTypeInfo().DeclaredConstructors.FirstOrDefault();
 
                     var originEntityType = _queryModelVisitor.QueryCompilationContext.Model.FindEntityType(originQuerySourceExpression.Type);
@@ -1962,7 +1962,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
 //                    var keyAccessExpressions = keyProperties.Select(p => Expression.MakeMemberAccess(qsre, p.GetMemberInfo(forConstruction: false, forSet: false))).ToArray();
 
                     return Expression.New(
-                        AnonymousObject.AnonymousObjectCtor,
+                        AnonymousObject2.AnonymousObjectCtor,
                         Expression.NewArrayInit(
                             typeof(object),
                             keyAccessExpressions.Select(k => Expression.Convert(k, typeof(object)))));
@@ -1988,8 +1988,8 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                     var primaryKeyProperties = foreignKey.PrincipalKey.Properties;
                     var foreignKeyProperties = foreignKey.Properties;
 
-                    var outerKeyParameter = Expression.Parameter(typeof(AnonymousObject), "o");
-                    var innerKeyParameter = Expression.Parameter(typeof(AnonymousObject), "i");
+                    var outerKeyParameter = Expression.Parameter(typeof(AnonymousObject2), "o");
+                    var innerKeyParameter = Expression.Parameter(typeof(AnonymousObject2), "i");
 
                     return Expression.Lambda(
                         primaryKeyProperties
@@ -2002,7 +2002,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                                         Expression.Convert(
                                             Expression.Call(
                                                 outerKeyParameter,
-                                                AnonymousObject.GetValueMethodInfo,
+                                                AnonymousObject2.GetValueMethodInfo,
                                                 Expression.Constant(outer.i)),
                                             primaryKeyProperties[outer.i].ClrType);
 
@@ -2010,7 +2010,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                                         Expression.Convert(
                                             Expression.Call(
                                                 innerKeyParameter,
-                                                AnonymousObject.GetValueMethodInfo,
+                                                AnonymousObject2.GetValueMethodInfo,
                                                 Expression.Constant(outer.i)),
                                             foreignKeyProperties[outer.i].ClrType);
 
