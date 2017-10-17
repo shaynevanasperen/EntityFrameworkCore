@@ -25,6 +25,7 @@ using Remotion.Linq.Clauses;
 using Remotion.Linq.Clauses.Expressions;
 using Remotion.Linq.Clauses.ExpressionVisitors;
 using Remotion.Linq.Clauses.ResultOperators;
+using Microsoft.EntityFrameworkCore.Query.Expressions.Internal;
 
 namespace Microsoft.EntityFrameworkCore.Query
 {
@@ -886,10 +887,21 @@ namespace Microsoft.EntityFrameworkCore.Query
                 {
                     if (_insideShapedQueryMethod)
                     {
+                        var shaperArgumentExpression = arguments[2];
+                        if (shaperArgumentExpression is ShaperWrappingExpression shaperWrappingExpression)
+                        {
+                            shaperArgumentExpression = shaperWrappingExpression.CompiledShaperExpression;
+                        }
+
                         return Expression.Call(
                             _relationalQueryCompilationContext.QueryMethodProvider.ShapedQueryMethod
-                                .MakeGenericMethod(((Shaper)((ConstantExpression)arguments[2]).Value).Type),
+                                .MakeGenericMethod(((Shaper)((ConstantExpression)shaperArgumentExpression).Value).Type),
                             arguments);
+
+                        //return Expression.Call(
+                        //    _relationalQueryCompilationContext.QueryMethodProvider.ShapedQueryMethod
+                        //        .MakeGenericMethod(((Shaper)((ConstantExpression)arguments[2]).Value).Type),
+                        //    arguments);
                     }
 
                     if (methodCallExpression.Method.MethodIsClosedFormOf(
@@ -1081,16 +1093,19 @@ namespace Microsoft.EntityFrameworkCore.Query
                     {
                         var materializer = (LambdaExpression)methodCallExpression.Arguments[1];
 
-                        //if (selectClause.Selector.Type == typeof(AnonymousObject))
-                        //{
-                        //    // We will end up fully translating this projection, so turn
-                        //    // this into a no-op.
 
-                        //    materializer
-                        //        = Expression.Lambda(
-                        //            Expression.Default(materializer.Body.Type),
-                        //            materializer.Parameters);
-                        //}
+                        // TODO: foo
+
+                        if (selectClause.Selector.Type == typeof(AnonymousObject))
+                        {
+                            // We will end up fully translating this projection, so turn
+                            // this into a no-op.
+
+                            //materializer
+                            //    = Expression.Lambda(
+                            //        Expression.Default(materializer.Body.Type),
+                            //        materializer.Parameters);
+                        }
 
                         var qsreFinder = new QuerySourceReferenceFindingExpressionVisitor();
 
@@ -1107,6 +1122,10 @@ namespace Microsoft.EntityFrameworkCore.Query
 
                             newShaper = newShaper ?? ProjectionShaper.Create(oldShaper, materializer);
 
+                            var shaperWrapper = new ShaperWrappingExpression(
+                                Expression.Constant(newShaper),
+                                materializer);
+
                             Expression =
                                 Expression.Call(
                                     shapedQuery.Method
@@ -1114,7 +1133,9 @@ namespace Microsoft.EntityFrameworkCore.Query
                                         .MakeGenericMethod(Expression.Type.GetSequenceType()),
                                     shapedQuery.Arguments[0],
                                     shapedQuery.Arguments[1],
-                                    Expression.Constant(newShaper));
+                                    shaperWrapper);
+
+                                    //Expression.Constant(newShaper));                        
                         }
                     }
                 }
@@ -1279,7 +1300,15 @@ namespace Microsoft.EntityFrameworkCore.Query
 
         private Shaper ExtractShaper(MethodCallExpression shapedQueryExpression, int offset)
         {
-            var shaper = (Shaper)((ConstantExpression)UnwrapShapedQueryExpression(shapedQueryExpression).Arguments[2]).Value;
+            var shaperArgument = UnwrapShapedQueryExpression(shapedQueryExpression).Arguments[2];
+            if (shaperArgument is ShaperWrappingExpression shaperWrappingExpression)
+            {
+                shaperArgument = shaperWrappingExpression.CompiledShaperExpression;
+            }
+
+            var shaper = (Shaper)((ConstantExpression)shaperArgument).Value;
+
+            //var shaper = (Shaper)((ConstantExpression)UnwrapShapedQueryExpression(shapedQueryExpression).Arguments[2]).Value;
 
             return shaper.WithOffset(offset);
         }

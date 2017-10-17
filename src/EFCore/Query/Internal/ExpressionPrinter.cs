@@ -770,6 +770,10 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     VisitNullConditionalEqualExpression(nullConditionalEqualExpression);
                     break;
 
+                case ShaperWrappingExpression shaperWrappingExpression:
+                    VisitShaperWrappingExpression(shaperWrappingExpression);
+                    break;
+
                 default:
                     UnhandledExpressionType(extensionExpression);
                     break;
@@ -821,6 +825,16 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
             Visit(nullConditionalEqualExpression.OuterKey);
             _stringBuilder.Append(" ?= ");
             Visit(nullConditionalEqualExpression.InnerKey);
+        }
+
+        private void VisitShaperWrappingExpression(ShaperWrappingExpression shaperWrappingExpression)
+        {
+            _stringBuilder.Append("(");
+            Visit(shaperWrappingExpression.CompiledShaperExpression);
+            _stringBuilder.AppendLine();
+            _stringBuilder.Append("materializer: ");
+            Visit(shaperWrappingExpression.MaterializerExpression);
+            _stringBuilder.Append(")");
         }
 
         private void VisitArguments(IList<Expression> arguments, Action<string> appendAction, string lastSeparator = "")
