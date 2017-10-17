@@ -182,11 +182,6 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors
         /// </returns>
         public override Expression Visit(Expression expression)
         {
-            if (expression.ToString() == @"new AnonymousObject(new [] {[_g].GetValue(1), [_g].GetValue(2)})")
-            {
-
-            }
-
             var selectExpression = QueryModelVisitor.TryGetQuery(_querySource);
 
             if (expression != null
@@ -229,15 +224,6 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors
                         }
 
                         if (sqlExpression is ColumnExpression)
-                        {
-                            var index = selectExpression.AddToProjection(sqlExpression);
-
-                            _sourceExpressionProjectionMapping[expression] = selectExpression.Projection[index];
-
-                            return expression;
-                        }
-
-                        if (sqlExpression is ColumnReferenceExpression)
                         {
                             var index = selectExpression.AddToProjection(sqlExpression);
 

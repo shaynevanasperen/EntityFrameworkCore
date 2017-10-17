@@ -3102,7 +3102,6 @@ namespace Microsoft.EntityFrameworkCore.Query
             }
         }
 
-
         [ConditionalFact]
         public virtual void BasicProjectionNested()
         {
@@ -3112,7 +3111,6 @@ namespace Microsoft.EntityFrameworkCore.Query
                 var result = query.ToList();
             }
         }
-
 
         [ConditionalFact]
         public virtual void BasicProjectionAggregate()

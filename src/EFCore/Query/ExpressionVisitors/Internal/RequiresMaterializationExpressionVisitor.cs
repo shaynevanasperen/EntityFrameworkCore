@@ -148,13 +148,27 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
             return newExpression;
         }
 
+
+        private bool _insideIncludeMethod = false;
+
         /// <summary>
         ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
+            var oldInsideIncludeMethod = _insideIncludeMethod;
+            if (node.Method.Name == "IncludeCollection")
+            {
+                _insideIncludeMethod = true;
+            }
+
             var newExpression = (MethodCallExpression)base.VisitMethodCall(node);
+
+            if (node.Method.Name == "IncludeCollection")
+            {
+                _insideIncludeMethod = oldInsideIncludeMethod;
+            }
 
             _queryModelVisitor.BindMethodCallExpression(
                 node, (property, querySource) =>
@@ -165,7 +179,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                         }
                     });
 
-            if (AnonymousObject.IsGetValueExpression(node, out var querySourceReferenceExpression))
+            if (/*_insideIncludeMethod &&*/ AnonymousObject.IsGetValueExpression(node, out var querySourceReferenceExpression))
             {
                 DemoteQuerySource(querySourceReferenceExpression.ReferencedQuerySource);
             }

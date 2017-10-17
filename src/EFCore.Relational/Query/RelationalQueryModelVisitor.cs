@@ -1081,16 +1081,16 @@ namespace Microsoft.EntityFrameworkCore.Query
                     {
                         var materializer = (LambdaExpression)methodCallExpression.Arguments[1];
 
-                        if (selectClause.Selector.Type == typeof(AnonymousObject))
-                        {
-                            // We will end up fully translating this projection, so turn
-                            // this into a no-op.
+                        //if (selectClause.Selector.Type == typeof(AnonymousObject))
+                        //{
+                        //    // We will end up fully translating this projection, so turn
+                        //    // this into a no-op.
 
-                            materializer
-                                = Expression.Lambda(
-                                    Expression.Default(materializer.Body.Type),
-                                    materializer.Parameters);
-                        }
+                        //    materializer
+                        //        = Expression.Lambda(
+                        //            Expression.Default(materializer.Body.Type),
+                        //            materializer.Parameters);
+                        //}
 
                         var qsreFinder = new QuerySourceReferenceFindingExpressionVisitor();
 

@@ -1998,34 +1998,91 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                                 foreignKeyProperties,
                                 (outer, inner) =>
                                 {
-                                    Expression outerKeyAccess =
+                                    //Expression outerKeyAccess =
+                                    //    Expression.Convert(
+                                    //        Expression.Call(
+                                    //            outerKeyParameter,
+                                    //            AnonymousObject.GetValueMethodInfo,
+                                    //            Expression.Constant(outer.i)),
+                                    //        primaryKeyProperties[outer.i].ClrType);
+
+                                    var outerKeyAccess =
+                                        Expression.Call(
+                                            outerKeyParameter,
+                                            AnonymousObject.GetValueMethodInfo,
+                                            Expression.Constant(outer.i));
+
+                                    var typedOuterKeyAccess = 
                                         Expression.Convert(
-                                            Expression.Call(
-                                                outerKeyParameter,
-                                                AnonymousObject.GetValueMethodInfo,
-                                                Expression.Constant(outer.i)),
+                                            outerKeyAccess,
                                             primaryKeyProperties[outer.i].ClrType);
 
-                                    Expression innerKeyAccess =
+                                    //Expression innerKeyAccess =
+                                    //    Expression.Convert(
+                                    //        Expression.Call(
+                                    //            innerKeyParameter,
+                                    //            AnonymousObject.GetValueMethodInfo,
+                                    //            Expression.Constant(outer.i)),
+                                    //        foreignKeyProperties[outer.i].ClrType);
+
+                                    var innerKeyAccess =
+                                        Expression.Call(
+                                            innerKeyParameter,
+                                            AnonymousObject.GetValueMethodInfo,
+                                            Expression.Constant(outer.i));
+
+                                    var typedInnerKeyAccess =
                                         Expression.Convert(
-                                            Expression.Call(
-                                                innerKeyParameter,
-                                                AnonymousObject.GetValueMethodInfo,
-                                                Expression.Constant(outer.i)),
+                                            innerKeyAccess,
                                             foreignKeyProperties[outer.i].ClrType);
 
+
+
+
+
+
+
+                                    //Expression equalityExpression;
+                                    //if (outerKeyAccess.Type != innerKeyAccess.Type)
+                                    //{
+                                    //    if (outerKeyAccess.Type.IsNullableType())
+                                    //    {
+                                    //        innerKeyAccess = Expression.Convert(innerKeyAccess, outerKeyAccess.Type);
+                                    //    }
+                                    //    else
+                                    //    {
+                                    //        outerKeyAccess = Expression.Convert(outerKeyAccess, innerKeyAccess.Type);
+                                    //    }
+                                    //}
+
+
+
+
+
                                     Expression equalityExpression;
-                                    if (outerKeyAccess.Type != innerKeyAccess.Type)
+                                    if (typedOuterKeyAccess.Type != typedInnerKeyAccess.Type)
                                     {
-                                        if (outerKeyAccess.Type.IsNullableType())
+                                        if (typedOuterKeyAccess.Type.IsNullableType())
                                         {
-                                            innerKeyAccess = Expression.Convert(innerKeyAccess, outerKeyAccess.Type);
+                                            typedInnerKeyAccess = Expression.Convert(typedInnerKeyAccess, typedOuterKeyAccess.Type);
                                         }
                                         else
                                         {
-                                            outerKeyAccess = Expression.Convert(outerKeyAccess, innerKeyAccess.Type);
+                                            typedOuterKeyAccess = Expression.Convert(typedOuterKeyAccess, typedInnerKeyAccess.Type);
                                         }
                                     }
+
+
+
+
+
+
+
+
+
+
+
+
 
                                     //if (typeof(IStructuralEquatable).GetTypeInfo()
                                     //    .IsAssignableFrom(pkMemberAccess.Type.GetTypeInfo()))
@@ -2035,12 +2092,17 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                                     //}
                                     //else
                                     {
-                                        equalityExpression = Expression.Equal(outerKeyAccess, innerKeyAccess);
+                                        //equalityExpression = Expression.Equal(outerKeyAccess, innerKeyAccess);
+                                        equalityExpression = Expression.Equal(typedOuterKeyAccess, typedInnerKeyAccess);
                                     }
 
                                     return inner.ClrType.IsNullableType()
                                         ? Expression.Condition(
-                                            Expression.Equal(innerKeyAccess, Expression.Default(inner.ClrType)),
+                                            Expression.OrElse(
+                                                Expression.Equal(innerKeyAccess, Expression.Default(innerKeyAccess.Type)),
+                                                Expression.Equal(outerKeyAccess, Expression.Default(outerKeyAccess.Type)))
+                                                ,
+                                            //Expression.Equal(innerKeyAccess, Expression.Constant(null)),
                                             Expression.Constant(false),
                                             equalityExpression)
                                         : equalityExpression;

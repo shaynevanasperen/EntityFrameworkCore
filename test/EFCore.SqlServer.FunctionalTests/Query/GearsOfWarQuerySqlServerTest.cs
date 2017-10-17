@@ -4233,7 +4233,6 @@ ORDER BY [g].[SquadId], [g].[Nickname]");
                 @"");
         }
 
-
         public override void BasicProjectionNested()
         {
             base.BasicProjectionNested();

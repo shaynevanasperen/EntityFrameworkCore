@@ -3713,6 +3713,44 @@ namespace Microsoft.EntityFrameworkCore.Query
             }
         }
 
+
+
+
+        [ConditionalFact]
+        public virtual void Takietam()
+        {
+            using (var context = CreateContext())
+            {
+                var useString = false;
+
+                var customer
+                    = useString
+                        ? context.Set<Customer>()
+                            .Include("Orders.OrderDetails")
+                            .SingleOrDefault(c => c.CustomerID == "ALFKI")
+                        : context.Set<Customer>()
+                            .Include(c => c.Orders).ThenInclude(o => o.OrderDetails)
+                            .SingleOrDefault(c => c.CustomerID == "ALFKI");
+
+                Assert.NotNull(customer);
+                Assert.Equal(6, customer.Orders.Count);
+                Assert.True(customer.Orders.SelectMany(o => o.OrderDetails).Count() >= 6);
+
+                CheckIsLoaded(
+                    context,
+                    customer,
+                    ordersLoaded: true,
+                    orderDetailsLoaded: true,
+                    productLoaded: false);
+            }
+
+
+
+        }
+
+
+
+
         private static void CheckIsLoaded(
             NorthwindContext context,
             Customer customer,

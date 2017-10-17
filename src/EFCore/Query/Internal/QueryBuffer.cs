@@ -205,23 +205,23 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
             {
                 var shouldInclude = correlationnPredicate(outerKey, enumerator.Current.Key.Value);
 
-                if (shouldInclude)
-                {
-                    if (originKeysMap.TryGetValue(outerKey, out var foobar))
-                    {
-                        if (enumerator.Current.Value.Equals(foobar))
-                        {
-                            shouldInclude = false;
-                        }
+                //if (shouldInclude)
+                //{
+                //    if (originKeysMap.TryGetValue(outerKey, out var foobar))
+                //    {
+                //        if (enumerator.Current.Value.Equals(foobar))
+                //        {
+                //            shouldInclude = false;
+                //        }
 
-                        // compare
+                //        // compare
 
-                    }
-                    else
-                    {
-                        originKeysMap[outerKey] = enumerator.Current.Value;
-                    }
-                }
+                //    }
+                //    else
+                //    {
+                //        originKeysMap[outerKey] = enumerator.Current.Value;
+                //    }
+                //}
 
 
                 //if (firstOriginElementKey == null
