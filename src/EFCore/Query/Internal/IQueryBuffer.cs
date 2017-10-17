@@ -93,8 +93,8 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
             object originQuerySource,
             INavigation navigation,
             INavigation firstNavigation,
-            AnonymousObject2 outerKey,
-            Func<IEnumerable<KeyValuePair<KeyValuePair<TInner, AnonymousObject2>, AnonymousObject2>>> childCollectionElementFactory,
-            Func<AnonymousObject2, AnonymousObject2, bool> correlationnPredicate);
+            AnonymousObject outerKey,
+            Func<IEnumerable<KeyValuePair<KeyValuePair<TInner, AnonymousObject>, AnonymousObject>>> childCollectionElementFactory,
+            Func<AnonymousObject, AnonymousObject, bool> correlationnPredicate);
     }
 }

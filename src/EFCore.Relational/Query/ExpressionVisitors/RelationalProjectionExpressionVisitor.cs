@@ -146,19 +146,6 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors
                 return newExpression;
             }
 
-            if (newExpression.Type == typeof(AnonymousObject2))
-            {
-                var propertyCallExpressions
-                    = ((NewArrayExpression)newExpression.Arguments.Single()).Expressions;
-
-                foreach (var propertyCallExpression in propertyCallExpressions)
-                {
-                    Visit(propertyCallExpression.RemoveConvert());
-                }
-
-                return newExpression;
-            }
-
             var newNewExpression = base.VisitNew(newExpression);
 
             var selectExpression = QueryModelVisitor.TryGetQuery(_querySource);
@@ -195,6 +182,11 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors
         /// </returns>
         public override Expression Visit(Expression expression)
         {
+            if (expression.ToString() == @"new AnonymousObject(new [] {[_g].GetValue(1), [_g].GetValue(2)})")
+            {
+
+            }
+
             var selectExpression = QueryModelVisitor.TryGetQuery(_querySource);
 
             if (expression != null
@@ -237,6 +229,15 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors
                         }
 
                         if (sqlExpression is ColumnExpression)
+                        {
+                            var index = selectExpression.AddToProjection(sqlExpression);
+
+                            _sourceExpressionProjectionMapping[expression] = selectExpression.Projection[index];
+
+                            return expression;
+                        }
+
+                        if (sqlExpression is ColumnReferenceExpression)
                         {
                             var index = selectExpression.AddToProjection(sqlExpression);
 

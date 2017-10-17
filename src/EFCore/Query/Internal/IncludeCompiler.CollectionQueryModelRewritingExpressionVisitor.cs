@@ -169,7 +169,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     clonedParentQuerySourceReferenceExpression);
 
                 clonedParentQueryModel.SelectClause
-                    = new SelectClause(Expression.Default(typeof(AnonymousObject2)));
+                    = new SelectClause(Expression.Default(typeof(AnonymousObject)));
 
                 var subQueryProjection = new List<Expression>();
 
@@ -189,7 +189,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     = new QuerySourceReferenceExpression(collectionQueryModel.MainFromClause);
 
                 var joinQuerySourceReferenceExpression
-                    = CreateJoinToParentQuery2(
+                    = CreateJoinToParentQuery(
                         clonedParentQueryModel,
                         clonedParentQuerySourceReferenceExpression,
                         collectionQuerySourceReferenceExpression,
@@ -203,7 +203,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     querySourceMapping,
                     lastResultOperator);
 
-                LiftOrderBy2(
+                LiftOrderBy(
                     clonedParentQuerySource,
                     joinQuerySourceReferenceExpression,
                     clonedParentQueryModel,
@@ -212,7 +212,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
 
                 clonedParentQueryModel.SelectClause.Selector
                     = Expression.New(
-                        AnonymousObject2.AnonymousObjectCtor,
+                        AnonymousObject.AnonymousObjectCtor,
                         Expression.NewArrayInit(
                             typeof(object),
                             subQueryProjection));
@@ -336,7 +336,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     var newExpression
                         = Expression.Call(
                             joinQuerySourceReferenceExpression,
-                            AnonymousObject2.GetValueMethodInfo,
+                            AnonymousObject.GetValueMethodInfo,
                             Expression.Constant(projectionIndex));
 
 
@@ -364,7 +364,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     ctor,
                     ((NewExpression)collectionQueryModel.SelectClause.Selector).Arguments[0],
                     Expression.New(
-                        AnonymousObject2.AnonymousObjectCtor,
+                        AnonymousObject.AnonymousObjectCtor,
                         Expression.NewArrayInit(
                             typeof(object),
                             newInnerArguments2)));
@@ -743,95 +743,6 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                 return joinQuerySourceReferenceExpression;
             }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-            private static QuerySourceReferenceExpression CreateJoinToParentQuery2(
-                QueryModel parentQueryModel,
-                QuerySourceReferenceExpression parentQuerySourceReferenceExpression,
-                Expression outerTargetExpression,
-                IForeignKey foreignKey,
-                QueryModel targetQueryModel,
-                ICollection<Expression> subQueryProjection)
-            {
-                var subQueryExpression = new SubQueryExpression(parentQueryModel);
-                var parentQuerySource = parentQuerySourceReferenceExpression.ReferencedQuerySource;
-
-                var joinClause
-                    = new JoinClause(
-                        "_" + parentQuerySource.ItemName,
-                        typeof(AnonymousObject2),
-                        subQueryExpression,
-                        CreateKeyAccessExpression(
-                            outerTargetExpression,
-                            foreignKey.Properties),
-                        Expression.Constant(null));
-
-                var joinQuerySourceReferenceExpression = new QuerySourceReferenceExpression(joinClause);
-                var innerKeyExpressions = new List<Expression>();
-
-                foreach (var principalKeyProperty in foreignKey.PrincipalKey.Properties)
-                {
-                    innerKeyExpressions.Add(
-                        Expression.Convert(
-                            Expression.Call(
-                                joinQuerySourceReferenceExpression,
-                                AnonymousObject2.GetValueMethodInfo,
-                                Expression.Constant(subQueryProjection.Count)),
-                            principalKeyProperty.ClrType.MakeNullable()));
-
-                    var propertyExpression
-                        = parentQuerySourceReferenceExpression.CreateEFPropertyExpression(principalKeyProperty);
-
-                    subQueryProjection.Add(
-                        Expression.Convert(
-                            new NullConditionalExpression(
-                                parentQuerySourceReferenceExpression,
-                                propertyExpression),
-                            typeof(object)));
-                }
-
-                joinClause.InnerKeySelector
-                    = innerKeyExpressions.Count == 1
-                        ? innerKeyExpressions[0]
-                        : Expression.New(
-                            AnonymousObject2.AnonymousObjectCtor,
-                            Expression.NewArrayInit(
-                                typeof(object),
-                                innerKeyExpressions.Select(e => Expression.Convert(e, typeof(object)))));
-
-                targetQueryModel.BodyClauses.Add(joinClause);
-
-                return joinQuerySourceReferenceExpression;
-            }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             // TODO: Unify this with other versions
             private static Expression CreateKeyAccessExpression(Expression target, IReadOnlyList<IProperty> properties)
                 => properties.Count == 1
@@ -990,128 +901,6 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     }
                 }
             }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            private static void LiftOrderBy2(
-                IQuerySource querySource,
-                Expression targetExpression,
-                QueryModel fromQueryModel,
-                QueryModel toQueryModel,
-                List<Expression> subQueryProjection)
-            {
-                var canRemove
-                    = !fromQueryModel.ResultOperators
-                        .Any(r => r is SkipResultOperator || r is TakeResultOperator);
-
-                foreach (var orderByClause
-                    in fromQueryModel.BodyClauses.OfType<OrderByClause>().ToArray())
-                {
-                    var outerOrderByClause = new OrderByClause();
-
-                    foreach (var ordering in orderByClause.Orderings)
-                    {
-                        int projectionIndex;
-
-                        if (ordering.Expression is MemberExpression memberExpression
-                            && memberExpression.Expression is QuerySourceReferenceExpression memberQsre
-                            && memberQsre.ReferencedQuerySource == querySource)
-                        {
-                            projectionIndex
-                                = subQueryProjection
-                                    .FindIndex(
-                                        e =>
-                                        {
-                                            var expressionWithoutConvert = e.RemoveConvert();
-                                            var projectionExpression = (expressionWithoutConvert as NullConditionalExpression)?.AccessOperation
-                                                                       ?? expressionWithoutConvert;
-
-                                            if (projectionExpression is MethodCallExpression methodCall
-                                                && methodCall.Method.IsEFPropertyMethod())
-                                            {
-                                                var properyQsre = (QuerySourceReferenceExpression)methodCall.Arguments[0];
-                                                var propertyName = (string)((ConstantExpression)methodCall.Arguments[1]).Value;
-
-                                                return properyQsre.ReferencedQuerySource == memberQsre.ReferencedQuerySource
-                                                       && propertyName == memberExpression.Member.Name;
-                                            }
-
-                                            if (projectionExpression is MemberExpression projectionMemberExpression)
-                                            {
-                                                var projectionMemberQsre = (QuerySourceReferenceExpression)projectionMemberExpression.Expression;
-
-                                                return projectionMemberQsre.ReferencedQuerySource == memberQsre.ReferencedQuerySource
-                                                       && projectionMemberExpression.Member.Name == memberExpression.Member.Name;
-                                            }
-
-                                            return false;
-                                        });
-                        }
-                        else
-                        {
-                            projectionIndex
-                                = subQueryProjection
-                                    .FindIndex(e => _expressionEqualityComparer.Equals(e.RemoveConvert(), ordering.Expression));
-                        }
-
-                        if (projectionIndex == -1)
-                        {
-                            projectionIndex = subQueryProjection.Count;
-
-                            subQueryProjection.Add(
-                                Expression.Convert(
-                                    // Workaround re-linq#RMLNQ-111 - When this is fixed the Clone can go away
-                                    CloningExpressionVisitor.AdjustExpressionAfterCloning(
-                                        ordering.Expression,
-                                        new QuerySourceMapping()),
-                                    typeof(object)));
-                        }
-
-                        var newExpression
-                            = Expression.Call(
-                                targetExpression,
-                                AnonymousObject2.GetValueMethodInfo,
-                                Expression.Constant(projectionIndex));
-
-                        outerOrderByClause.Orderings
-                            .Add(new Ordering(newExpression, ordering.OrderingDirection));
-                    }
-
-                    toQueryModel.BodyClauses.Add(outerOrderByClause);
-
-                    if (canRemove)
-                    {
-                        fromQueryModel.BodyClauses.Remove(orderByClause);
-                    }
-                }
-            }
-
-
-
-
-
-
-
-
 
             private class QuerySourceReferenceFindingExpressionTreeVisitor : RelinqExpressionVisitor
             {
