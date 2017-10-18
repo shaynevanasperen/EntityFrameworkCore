@@ -160,12 +160,12 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
             object originQuerySource,
             INavigation navigation,
             INavigation firstNavigation,
-            AnonymousObject outerKey,
-            Func<IEnumerable<KeyValuePair<KeyValuePair<TInner, AnonymousObject>, AnonymousObject>>> childCollectionElementFactory,
-            Func<AnonymousObject, AnonymousObject, bool> correlationnPredicate)
+            AnonymousObject2 outerKey,
+            Func<IEnumerable<KeyValuePair<KeyValuePair<TInner, AnonymousObject2>, AnonymousObject2>>> childCollectionElementFactory,
+            Func<AnonymousObject2, AnonymousObject2, bool> correlationnPredicate)
         {
             IDisposable untypedEnumerator = null;
-            IEnumerator<KeyValuePair<KeyValuePair<TInner, AnonymousObject>, AnonymousObject>> enumerator = null;
+            IEnumerator<KeyValuePair<KeyValuePair<TInner, AnonymousObject2>, AnonymousObject2>> enumerator = null;
 
             if (childCollectionId == -1
                 || !_childCollections.TryGetValue(childCollectionId, out untypedEnumerator))
@@ -195,10 +195,10 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     return (IEnumerable<TInner>)result;
                 }
 
-                enumerator = (IEnumerator<KeyValuePair<KeyValuePair<TInner, AnonymousObject>, AnonymousObject>>)untypedEnumerator;
+                enumerator = (IEnumerator<KeyValuePair<KeyValuePair<TInner, AnonymousObject2>, AnonymousObject2>>)untypedEnumerator;
             }
 
-            var originKeysMap = new Dictionary<AnonymousObject, AnonymousObject>();
+            var originKeysMap = new Dictionary<AnonymousObject2, AnonymousObject2>();
 
             var inners = new List<TInner>();
             while (true)

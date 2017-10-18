@@ -878,6 +878,22 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors
                     return Expression.Constant(memberBindings);
                 }
             }
+            else if (expression.Type == typeof(AnonymousObject2))
+            {
+                var propertyCallExpressions
+                    = ((NewArrayExpression)expression.Arguments.Single()).Expressions;
+
+                var memberBindings
+                    = propertyCallExpressions
+                        .Select(Visit)
+                        .Where(e => e != null)
+                        .ToArray();
+
+                if (memberBindings.Length == propertyCallExpressions.Count)
+                {
+                    return Expression.Constant(memberBindings);
+                }
+            }
 
             return null;
         }

@@ -1424,18 +1424,6 @@ INNER JOIN (
 ORDER BY [t].[c], [t].[CustomerID]");
         }
 
-
-        public override void Takietam()
-        {
-            base.Takietam();
-
-            AssertSql(
-                @"");
-
-
-
-        }
-
         private void AssertSql(params string[] expected)
             => Fixture.TestSqlLoggerFactory.AssertBaseline(expected);
 

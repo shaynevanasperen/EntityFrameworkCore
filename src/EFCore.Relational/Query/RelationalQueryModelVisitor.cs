@@ -1093,18 +1093,15 @@ namespace Microsoft.EntityFrameworkCore.Query
                     {
                         var materializer = (LambdaExpression)methodCallExpression.Arguments[1];
 
-
-                        // TODO: foo
-
                         if (selectClause.Selector.Type == typeof(AnonymousObject))
                         {
                             // We will end up fully translating this projection, so turn
                             // this into a no-op.
 
-                            //materializer
-                            //    = Expression.Lambda(
-                            //        Expression.Default(materializer.Body.Type),
-                            //        materializer.Parameters);
+                            materializer
+                                = Expression.Lambda(
+                                    Expression.Default(materializer.Body.Type),
+                                    materializer.Parameters);
                         }
 
                         var qsreFinder = new QuerySourceReferenceFindingExpressionVisitor();
@@ -1479,18 +1476,18 @@ namespace Microsoft.EntityFrameworkCore.Query
             var outerShaper = ExtractShaper(outerShapedQuery, 0);
             var innerShaper = ExtractShaper(innerShapedQuery, previousProjectionCount);
 
-            //if (innerShaper.Type == typeof(AnonymousObject))
-            //{
-            //    Expression = outerShapedQuery;
-            //    CurrentParameter = previousParameter;
+            if (innerShaper.Type == typeof(AnonymousObject))
+            {
+                Expression = outerShapedQuery;
+                CurrentParameter = previousParameter;
 
-            //    foreach (var mapping in previousMapping)
-            //    {
-            //        QueryCompilationContext.QuerySourceMapping
-            //            .ReplaceMapping(mapping.Key, mapping.Value);
-            //    }
-            //}
-            //else
+                foreach (var mapping in previousMapping)
+                {
+                    QueryCompilationContext.QuerySourceMapping
+                        .ReplaceMapping(mapping.Key, mapping.Value);
+                }
+            }
+            else
             {
                 var materializerLambda = (LambdaExpression)joinMethodCallExpression.Arguments.Last();
 
