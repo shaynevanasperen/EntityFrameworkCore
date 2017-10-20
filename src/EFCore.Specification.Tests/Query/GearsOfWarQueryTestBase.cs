@@ -3122,8 +3122,6 @@ namespace Microsoft.EntityFrameworkCore.Query
             }
         }
 
-
-
         [ConditionalFact]
         public virtual void BasicProjectionWithSelect()
         {
@@ -3144,6 +3142,35 @@ namespace Microsoft.EntityFrameworkCore.Query
             }
         }
 
+        [ConditionalFact]
+        public virtual void Complex_materialize_two_collections_same_qsre()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = ctx.Gears.Where(g => g.Nickname != "Marcus").Select(g => new { w1 = g.Weapons, w2 = g.Weapons });
+                var result = query.ToList();
+            }
+        }
+
+        [ConditionalFact]
+        public virtual void Complex_materialize_two_collections_same_qsre_different_predicate()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = ctx.Gears.Where(g => g.Nickname != "Marcus").Select(g => new { w1 = g.Weapons.Where(ww => ww.Id < 10), w2 = g.Weapons.Where(ww => ww.Id < 5) });
+                var result = query.ToList();
+            }
+        }
+
+        [ConditionalFact]
+        public virtual void Complex_materialize_two_collections_same_qsre_different_projection()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = ctx.Gears.Where(g => g.Nickname != "Marcus").Select(g => new { w1 = g.Weapons.Select(ww => ww.Name), w2 = g.Weapons.Select(ww => new { ww.Name, ww.IsAutomatic }) });
+                var result = query.ToList();
+            }
+        }
 
         protected GearsOfWarContext CreateContext() => Fixture.CreateContext();
 

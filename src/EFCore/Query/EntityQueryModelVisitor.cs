@@ -291,6 +291,8 @@ namespace Microsoft.EntityFrameworkCore.Query
 
             navigationRewritingExpressionVisitor.Rewrite(queryModel, parentQueryModel: null);
 
+            navigationRewritingExpressionVisitor.CorrelateSubqueries(queryModel);
+
             // first pass skips chaned navs ending in collections, second pass processed those missing collections
             //navigationRewritingExpressionVisitor.Rewrite(queryModel, parentQueryModel: null);
 

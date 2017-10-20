@@ -79,10 +79,50 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
             VisitQueryModel(queryModel);
 
             queryModel.TransformExpressions(_transformingExpressionVisitor.Visit);
+
+
+            queryModel.TransformExpressions(new SubqueryUniquefyingExpressionVisitor(queryCompilationContext).Visit);
+
+
+
             queryModel.TransformExpressions(new ConditionalOptimizingExpressionVisitor().Visit);
             queryModel.TransformExpressions(new EntityEqualityRewritingExpressionVisitor(queryCompilationContext).Visit);
             queryModel.TransformExpressions(new SubQueryMemberPushDownExpressionVisitor(queryCompilationContext).Visit);
         }
+
+
+
+        private class SubqueryUniquefyingExpressionVisitor : ExpressionVisitors.ExpressionVisitorBase
+        {
+            private readonly QueryCompilationContext _queryCompilationContext;
+
+            public SubqueryUniquefyingExpressionVisitor(QueryCompilationContext queryCompilationContext)
+            {
+                _queryCompilationContext = queryCompilationContext;
+            }
+
+            private System.Collections.Generic.List<QueryModel> _processedQueryModels = new System.Collections.Generic.List<QueryModel>();
+
+            protected override Expression VisitSubQuery(SubQueryExpression subQueryExpression)
+            {
+                var newSubQueryExpression = subQueryExpression;
+                if (_processedQueryModels.Contains(subQueryExpression.QueryModel))
+                {
+                    var querySourceMapping = new QuerySourceMapping();
+                    var clonedQueryModel = subQueryExpression.QueryModel.Clone(querySourceMapping);
+                    _queryCompilationContext.UpdateMapping(querySourceMapping);
+
+                    newSubQueryExpression = new SubQueryExpression(clonedQueryModel);
+                }
+
+                _processedQueryModels.Add(newSubQueryExpression.QueryModel);
+
+                return base.VisitSubQuery(newSubQueryExpression);
+            }
+        }
+
+
+
 
         /// <summary>
         ///     This API supports the Entity Framework Core infrastructure and is not intended to be used

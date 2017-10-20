@@ -1071,6 +1071,12 @@ namespace Microsoft.EntityFrameworkCore.Query
 
             }
 
+
+            if (selectClause.ToString() == @"select new AnonymousObject2(new [] {Convert(EF.Property(?[g]?, ""FullName"")), Convert(EF.Property(?[g]?, ""Nickname"")), Convert(EF.Property(?[g]?, ""SquadId""))})")
+            {
+
+            }
+
             base.VisitSelectClause(selectClause, queryModel);
 
             if (Expression is MethodCallExpression methodCallExpression

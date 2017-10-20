@@ -312,20 +312,54 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
 
                                      var argumentWithoutConvert = innerArgument2.RemoveConvert();
 
+                                     QuerySourceReferenceExpression projectionQsre = null;
+                                     QuerySourceReferenceExpression argumentQsre = null;
+                                     string projectionName = null;
+                                     string argumentName = null;
 
                                      if (projectionExpression is MethodCallExpression projectionMethodCall
-                                        && argumentWithoutConvert is MethodCallExpression argumentMethodCall
-                                        && projectionMethodCall.IsEFProperty()
-                                        && argumentMethodCall.IsEFProperty()
-                                        && projectionMethodCall.Arguments[0] is QuerySourceReferenceExpression projectionQsre
-                                        && argumentMethodCall.Arguments[0] is QuerySourceReferenceExpression argumentQsre
-                                        && projectionQsre.ReferencedQuerySource == argumentQsre.ReferencedQuerySource
-                                        && _expressionEqualityComparer.Equals(projectionMethodCall.Arguments[1], argumentMethodCall.Arguments[1]))
+                                        && projectionMethodCall.IsEFProperty())
                                      {
-                                         return true;
+                                         projectionQsre = projectionMethodCall.Arguments[0] as QuerySourceReferenceExpression;
+                                         projectionName = (projectionMethodCall.Arguments[1] as ConstantExpression)?.Value as string;
+                                     }
+                                     else if (projectionExpression is MemberExpression projectionMember)
+                                     {
+                                         projectionQsre = projectionMember.Expression as QuerySourceReferenceExpression;
+                                         projectionName = projectionMember.Member.Name;
                                      }
 
-                                     return _expressionEqualityComparer.Equals(projectionExpression, innerArgument2.RemoveConvert());
+                                     if (argumentWithoutConvert is MethodCallExpression argumentMethodCall
+                                        && argumentMethodCall.IsEFProperty())
+                                     {
+                                         argumentQsre = argumentMethodCall.Arguments[0] as QuerySourceReferenceExpression;
+                                         argumentName = (argumentMethodCall.Arguments[1] as ConstantExpression)?.Value as string;
+                                     }
+                                     else if (argumentWithoutConvert is MemberExpression argumentMember)
+                                     {
+                                         argumentQsre = argumentMember.Expression as QuerySourceReferenceExpression;
+                                         argumentName = argumentMember.Member.Name;
+                                     }
+
+                                     return projectionQsre?.ReferencedQuerySource == argumentQsre?.ReferencedQuerySource
+                                        && projectionName == argumentName;
+
+
+
+
+
+
+                                     //if (projectionExpression is MethodCallExpression projectionMethodCall
+                                     //   && argumentWithoutConvert is MethodCallExpression argumentMethodCall
+                                     //   && projectionMethodCall.IsEFProperty()
+                                     //   && argumentMethodCall.IsEFProperty()
+                                     //   && projectionMethodCall.Arguments[0] is QuerySourceReferenceExpression projectionQsre
+                                     //   && argumentMethodCall.Arguments[0] is QuerySourceReferenceExpression argumentQsre
+                                     //   && projectionQsre.ReferencedQuerySource == argumentQsre.ReferencedQuerySource
+                                     //   && _expressionEqualityComparer.Equals(projectionMethodCall.Arguments[1], argumentMethodCall.Arguments[1]))
+                                     //{
+                                     //    return true;
+                                     //}
                                  });
 
                     if (projectionIndex == -1)
@@ -512,7 +546,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
 
                 var originEntityType = _queryCompilationContext.Model.FindEntityType(originQsre.Type);
 
-                foreach (var property in originEntityType.FindDeclaredPrimaryKey().Properties)
+                foreach (var property in originEntityType.FindPrimaryKey().Properties)
                 {
                     var propertyExpression = originQsre.CreateEFPropertyExpression(property);
 
@@ -800,7 +834,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     = innerKeyExpressions.Count == 1
                         ? innerKeyExpressions[0]
                         : Expression.New(
-                            AnonymousObject2.AnonymousObjectCtor,
+                            AnonymousObject.AnonymousObjectCtor,
                             Expression.NewArrayInit(
                                 typeof(object),
                                 innerKeyExpressions.Select(e => Expression.Convert(e, typeof(object)))));
