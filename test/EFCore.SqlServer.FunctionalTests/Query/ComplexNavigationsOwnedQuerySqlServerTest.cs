@@ -135,6 +135,16 @@ LEFT JOIN (
 ) AS [t0] ON [l1].[Id] = [t0].[Level1_Optional_Id]");
         }
 
+
+        public override void Select_nav_prop_collection_one_to_many_optional()
+        {
+            base.Select_nav_prop_collection_one_to_many_optional();
+
+            AssertSql(
+                @"");
+        }
+
+
         private void AssertSql(params string[] expected)
             => Fixture.TestSqlLoggerFactory.AssertBaseline(expected);
 

@@ -190,6 +190,12 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                 {
                     var clrCollectionAccessor = navigation.GetCollectionAccessor();
 
+                    var sequenceType = clrCollectionAccessor.CollectionType.TryGetSequenceType();
+                    if (sequenceType != typeof(TInner))
+                    {
+                        return new List<TInner>();
+                    }
+
                     var result = clrCollectionAccessor.Create();
 
                     return (IEnumerable<TInner>)result;
@@ -198,12 +204,39 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                 enumerator = (IEnumerator<KeyValuePair<KeyValuePair<TInner, AnonymousObject2>, AnonymousObject2>>)untypedEnumerator;
             }
 
-            var originKeysMap = new Dictionary<AnonymousObject2, AnonymousObject2>();
+            var originKeysMap = new Dictionary<AnonymousObject2, int>();
+
+            var previousOriginKey = default(AnonymousObject2);
+            var firstCollection = true;
+
+            var elementCount = -1;
 
             var inners = new List<TInner>();
             while (true)
             {
                 var shouldInclude = correlationnPredicate(outerKey, enumerator.Current.Key.Value);
+                if (shouldInclude)
+                {
+                    if (originKeysMap.TryGetValue(outerKey, out var expectedCount)
+                        && expectedCount > elementCount)
+                    {
+                        shouldInclude = false;
+                    }
+
+                    if (!firstCollection
+                        && outerKey != previousOriginKey)
+                    {
+                        shouldInclude = false;
+
+                        originKeysMap[previousOriginKey] = elementCount;
+                    }
+                }
+
+                firstCollection = false;
+                previousOriginKey = outerKey;
+
+
+
 
                 //if (shouldInclude)
                 //{
@@ -258,6 +291,8 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                     //    }
                     //}
 
+                    elementCount++;
+
                     if (!enumerator.MoveNext())
                     {
                         enumerator.Dispose();
@@ -267,11 +302,20 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                             _childCollections[childCollectionId] = null;
                         }
 
+                        //firstCollection = false;
+                        //previousOriginKey = outerKey;
+
                         break;
                     }
                 }
                 else
                 {
+                    //originKeysMap[previousOriginKey] = elementCount;
+                    //previousOriginKey = outerKey;
+
+                    //firstCollection = false;
+                    //previousOriginKey = outerKey;
+
                     break;
                 }
             }

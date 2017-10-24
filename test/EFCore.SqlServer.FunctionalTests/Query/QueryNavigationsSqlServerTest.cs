@@ -525,7 +525,23 @@ ORDER BY [t].[CustomerID]");
             base.Select_collection_navigation_multi_part2();
 
             AssertSql(
-                @"");
+                @"SELECT [od.Order.Customer].[CustomerID]
+FROM [Order Details] AS [od]
+INNER JOIN [Orders] AS [od.Order] ON [od].[OrderID] = [od.Order].[OrderID]
+LEFT JOIN [Customers] AS [od.Order.Customer] ON [od.Order].[CustomerID] = [od.Order.Customer].[CustomerID]
+WHERE [od.Order].[CustomerID] IN (N'ALFKI', N'ANTON')
+ORDER BY [od].[OrderID], [od].[ProductID], [od.Order.Customer].[CustomerID]",
+                //
+                @"SELECT [od.Order.Customer.Orders].[OrderID], [od.Order.Customer.Orders].[CustomerID], [od.Order.Customer.Orders].[EmployeeID], [od.Order.Customer.Orders].[OrderDate], [t].[CustomerID], [t].[OrderID], [t].[ProductID]
+FROM [Orders] AS [od.Order.Customer.Orders]
+INNER JOIN (
+    SELECT [od.Order.Customer0].[CustomerID], [od0].[OrderID], [od0].[ProductID]
+    FROM [Order Details] AS [od0]
+    INNER JOIN [Orders] AS [od.Order0] ON [od0].[OrderID] = [od.Order0].[OrderID]
+    LEFT JOIN [Customers] AS [od.Order.Customer0] ON [od.Order0].[CustomerID] = [od.Order.Customer0].[CustomerID]
+    WHERE [od.Order0].[CustomerID] IN (N'ALFKI', N'ANTON')
+) AS [t] ON [od.Order.Customer.Orders].[CustomerID] = [t].[CustomerID]
+ORDER BY [t].[OrderID], [t].[ProductID], [t].[CustomerID]");
         }
 
         public override void Collection_select_nav_prop_any()

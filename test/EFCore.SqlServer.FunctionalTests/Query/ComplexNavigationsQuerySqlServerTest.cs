@@ -623,6 +623,42 @@ INNER JOIN (
 ORDER BY [t].[Id]");
         }
 
+        public override void Select_nav_prop_collection_one_to_many_required()
+        {
+            base.Select_nav_prop_collection_one_to_many_required();
+
+            AssertSql(
+                @"SELECT [e].[Id]
+FROM [LevelOne] AS [e]
+ORDER BY [e].[Id]",
+                //
+                @"SELECT [t].[Id], [e.OneToMany_Required].[Id], [e.OneToMany_Required].[OneToMany_Required_InverseId]
+FROM [LevelTwo] AS [e.OneToMany_Required]
+INNER JOIN (
+    SELECT [e0].[Id]
+    FROM [LevelOne] AS [e0]
+) AS [t] ON [e.OneToMany_Required].[OneToMany_Required_InverseId] = [t].[Id]
+ORDER BY [t].[Id]");
+        }
+
+        public override void Select_nav_prop_collection_one_to_many_optional()
+        {
+            base.Select_nav_prop_collection_one_to_many_optional();
+
+            AssertSql(
+                @"SELECT [e].[Id]
+FROM [LevelOne] AS [e]
+ORDER BY [e].[Id]",
+                //
+                @"SELECT [t].[Id], [e.OneToMany_Optional].[Id], [e.OneToMany_Optional].[OneToMany_Optional_InverseId]
+FROM [LevelTwo] AS [e.OneToMany_Optional]
+INNER JOIN (
+    SELECT [e0].[Id]
+    FROM [LevelOne] AS [e0]
+) AS [t] ON [e.OneToMany_Optional].[OneToMany_Optional_InverseId] = [t].[Id]
+ORDER BY [t].[Id]");
+        }
+
         public override void Select_nav_prop_reference_optional1()
         {
             base.Select_nav_prop_reference_optional1();

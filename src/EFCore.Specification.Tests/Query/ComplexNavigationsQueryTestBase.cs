@@ -763,6 +763,24 @@ namespace Microsoft.EntityFrameworkCore.Query
         }
 
         [ConditionalFact]
+        public virtual void Select_nav_prop_collection_one_to_many_optional()
+        {
+            AssertQuery<Level1>(
+                l1s => l1s.OrderBy(e => e.Id).Select(e => e.OneToMany_Optional.Select(i => i.Id)),
+                assertOrder: true,
+                elementAsserter: (e, a) =>
+                {
+                    var expectedList = ((IEnumerable<int>)e).OrderBy(ee => ee).ToList();
+                    var actualList = ((IEnumerable<int>)a).OrderBy(aa => aa).ToList();
+                    Assert.Equal(expectedList.Count, actualList.Count);
+                    for (var i = 0; i < expectedList.Count; i++)
+                    {
+                        Assert.Equal(expectedList[i], actualList[i]);
+                    }
+                });
+        }
+
+        [ConditionalFact]
         public virtual void Select_nav_prop_reference_optional1()
         {
             AssertQuery<Level1>(

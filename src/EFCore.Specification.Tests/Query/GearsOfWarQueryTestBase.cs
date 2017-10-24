@@ -2381,6 +2381,97 @@ namespace Microsoft.EntityFrameworkCore.Query
         }
 
         [ConditionalFact]
+        public virtual void Clinet_complex()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = from g in ctx.Gears
+                            select (from g2 in ctx.Gears
+                                    where !g2.HasSoulPatch && FavoriteWeapon(g2.Weapons).Name == "Cole's Gnasher"
+                                    select g2.Nickname);
+
+                var result = query.ToList();
+            }
+        }
+
+        [ConditionalFact]
+        public virtual void Clinet_complex2()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = from g in ctx.Gears
+                            select FavoriteWeapon(g.Weapons).Name;
+
+                var result = query.ToList();
+            }
+        }
+
+        [ConditionalFact]
+        public virtual void Clinet_complex3()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = from g in ctx.Gears
+                            select (from g2 in ctx.Gears
+                                    where !g2.HasSoulPatch
+                                    select FavoriteWeapon(g2.Weapons).Name);
+
+                var result = query.ToList();
+            }
+        }
+
+        [ConditionalFact]
+        public virtual void Clinet_complex4()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = from g in ctx.Gears
+                            select (from g2 in ctx.Gears
+                                    where !g2.HasSoulPatch && FavoriteWeapon(g2.Weapons).Name != "Cole's Gnasher"
+                                    select FavoriteWeapon(g2.Weapons).Name);
+
+                var result = query.ToList();
+            }
+        }
+
+        [ConditionalFact]
+        public virtual void Clinet_complex5()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = 
+                            from g in ctx.Gears
+                            where !g.HasSoulPatch && FavoriteWeapon(g.Weapons).Name != "Cole's Gnasher"
+                            select FavoriteWeapon(g.Weapons).Name;
+
+                var result = query.ToList();
+            }
+        }
+
+
+
+        [ConditionalFact]
+        public virtual void Client_semi_complex()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = from g in ctx.Gears
+                            where Client_method(g.Nickname) != "Marcus"
+                            select g.Weapons;
+
+                var result = query.ToList();
+
+
+                Console.WriteLine(result);
+            }
+        }
+
+        public string Client_method(string foo)
+        {
+            return foo;
+        }
+
+        [ConditionalFact]
         public virtual void Client_method_on_collection_navigation_in_order_by()
         {
             AssertQuery<Gear>(

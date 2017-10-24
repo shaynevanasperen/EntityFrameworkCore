@@ -2680,7 +2680,7 @@ FROM [Gears] AS [g]
 WHERE [g].[Discriminator] = N'Officer'
 ORDER BY [g].[Nickname], [g].[SquadId]",
                 //
-                @"SELECT [g.Reports].[Nickname], [g.Reports].[SquadId], [g.Reports].[AssignedCityName], [g.Reports].[CityOrBirthName], [g.Reports].[Discriminator], [g.Reports].[FullName], [g.Reports].[HasSoulPatch], [g.Reports].[LeaderNickname], [g.Reports].[LeaderSquadId], [g.Reports].[Rank]
+                @"SELECT [g.Reports].[Nickname], [g.Reports].[SquadId], [g.Reports].[AssignedCityName], [g.Reports].[CityOrBirthName], [g.Reports].[Discriminator], [g.Reports].[FullName], [g.Reports].[HasSoulPatch], [g.Reports].[LeaderNickname], [g.Reports].[LeaderSquadId], [g.Reports].[Rank], [t].[Nickname], [t].[SquadId]
 FROM [Gears] AS [g.Reports]
 INNER JOIN (
     SELECT [g0].[Nickname], [g0].[SquadId]
@@ -3316,6 +3316,56 @@ FROM [Weapons] AS [w]
 WHERE @_outer_FullName = [w].[OwnerFullName]");
         }
 
+        public override void Clinet_complex()
+        {
+            base.Clinet_complex();
+
+            AssertSql(
+                @"");
+        }
+
+        public override void Clinet_complex2()
+        {
+            base.Clinet_complex2();
+
+            AssertSql(
+                @"");
+        }
+
+        public override void Clinet_complex3()
+        {
+            base.Clinet_complex3();
+
+            AssertSql(
+                @"");
+        }
+
+        public override void Clinet_complex4()
+        {
+            base.Clinet_complex4();
+
+            AssertSql(
+                @"");
+        }
+
+        public override void Clinet_complex5()
+        {
+            base.Clinet_complex5();
+
+            AssertSql(
+                @"");
+        }
+
+
+
+        public override void Client_semi_complex()
+        {
+            base.Client_semi_complex();
+
+            AssertSql(
+                @"");
+        }
+
         public override void Client_method_on_collection_navigation_in_order_by()
         {
             base.Client_method_on_collection_navigation_in_order_by();
@@ -3887,12 +3937,12 @@ LEFT JOIN (
     WHERE [h.Commander.DefeatedBy].[Discriminator] IN (N'Officer', N'Gear')
 ) AS [t0] ON ([t].[DefeatedByNickname] = [t0].[Nickname]) AND ([t].[DefeatedBySquadId] = [t0].[SquadId])
 WHERE [h].[Discriminator] = N'LocustHorde'
-ORDER BY [t0].[Nickname], [t0].[SquadId]",
+ORDER BY [h].[Id], [t0].[Nickname], [t0].[SquadId]",
                 //
-                @"SELECT [h.Commander.DefeatedBy.Reports].[Nickname], [h.Commander.DefeatedBy.Reports].[SquadId], [h.Commander.DefeatedBy.Reports].[AssignedCityName], [h.Commander.DefeatedBy.Reports].[CityOrBirthName], [h.Commander.DefeatedBy.Reports].[Discriminator], [h.Commander.DefeatedBy.Reports].[FullName], [h.Commander.DefeatedBy.Reports].[HasSoulPatch], [h.Commander.DefeatedBy.Reports].[LeaderNickname], [h.Commander.DefeatedBy.Reports].[LeaderSquadId], [h.Commander.DefeatedBy.Reports].[Rank]
+                @"SELECT [h.Commander.DefeatedBy.Reports].[Nickname], [h.Commander.DefeatedBy.Reports].[SquadId], [h.Commander.DefeatedBy.Reports].[AssignedCityName], [h.Commander.DefeatedBy.Reports].[CityOrBirthName], [h.Commander.DefeatedBy.Reports].[Discriminator], [h.Commander.DefeatedBy.Reports].[FullName], [h.Commander.DefeatedBy.Reports].[HasSoulPatch], [h.Commander.DefeatedBy.Reports].[LeaderNickname], [h.Commander.DefeatedBy.Reports].[LeaderSquadId], [h.Commander.DefeatedBy.Reports].[Rank], [t3].[Nickname], [t3].[SquadId], [t3].[Id]
 FROM [Gears] AS [h.Commander.DefeatedBy.Reports]
 INNER JOIN (
-    SELECT DISTINCT [t2].[Nickname], [t2].[SquadId]
+    SELECT [t2].[Nickname], [t2].[SquadId], [h0].[Id]
     FROM [Factions] AS [h0]
     LEFT JOIN (
         SELECT [h.Commander0].*
@@ -3907,7 +3957,7 @@ INNER JOIN (
     WHERE [h0].[Discriminator] = N'LocustHorde'
 ) AS [t3] ON ([h.Commander.DefeatedBy.Reports].[LeaderNickname] = [t3].[Nickname]) AND ([h.Commander.DefeatedBy.Reports].[LeaderSquadId] = [t3].[SquadId])
 WHERE [h.Commander.DefeatedBy.Reports].[Discriminator] IN (N'Officer', N'Gear')
-ORDER BY [t3].[Nickname], [t3].[SquadId]");
+ORDER BY [t3].[Id], [t3].[Nickname], [t3].[SquadId]");
         }
 
         public override void Project_collection_navigation_with_inheritance3()
@@ -3931,12 +3981,12 @@ LEFT JOIN (
     WHERE [f.Commander.DefeatedBy].[Discriminator] IN (N'Officer', N'Gear')
 ) AS [t0] ON ([t].[DefeatedByNickname] = [t0].[Nickname]) AND ([t].[DefeatedBySquadId] = [t0].[SquadId])
 WHERE ([f].[Discriminator] = N'LocustHorde') AND ([f].[Discriminator] = N'LocustHorde')
-ORDER BY [t0].[Nickname], [t0].[SquadId]",
+ORDER BY [f].[Id], [t0].[Nickname], [t0].[SquadId]",
                 //
-                @"SELECT [f.Commander.DefeatedBy.Reports].[Nickname], [f.Commander.DefeatedBy.Reports].[SquadId], [f.Commander.DefeatedBy.Reports].[AssignedCityName], [f.Commander.DefeatedBy.Reports].[CityOrBirthName], [f.Commander.DefeatedBy.Reports].[Discriminator], [f.Commander.DefeatedBy.Reports].[FullName], [f.Commander.DefeatedBy.Reports].[HasSoulPatch], [f.Commander.DefeatedBy.Reports].[LeaderNickname], [f.Commander.DefeatedBy.Reports].[LeaderSquadId], [f.Commander.DefeatedBy.Reports].[Rank]
+                @"SELECT [f.Commander.DefeatedBy.Reports].[Nickname], [f.Commander.DefeatedBy.Reports].[SquadId], [f.Commander.DefeatedBy.Reports].[AssignedCityName], [f.Commander.DefeatedBy.Reports].[CityOrBirthName], [f.Commander.DefeatedBy.Reports].[Discriminator], [f.Commander.DefeatedBy.Reports].[FullName], [f.Commander.DefeatedBy.Reports].[HasSoulPatch], [f.Commander.DefeatedBy.Reports].[LeaderNickname], [f.Commander.DefeatedBy.Reports].[LeaderSquadId], [f.Commander.DefeatedBy.Reports].[Rank], [t3].[Nickname], [t3].[SquadId], [t3].[Id]
 FROM [Gears] AS [f.Commander.DefeatedBy.Reports]
 INNER JOIN (
-    SELECT DISTINCT [t2].[Nickname], [t2].[SquadId]
+    SELECT [t2].[Nickname], [t2].[SquadId], [f0].[Id]
     FROM [Factions] AS [f0]
     LEFT JOIN (
         SELECT [f.Commander0].*
@@ -3954,7 +4004,7 @@ INNER JOIN (
     WHERE ([f0].[Discriminator] = N'LocustHorde') AND ([f0].[Discriminator] = N'LocustHorde')
 ) AS [t3] ON ([f.Commander.DefeatedBy.Reports].[LeaderNickname] = [t3].[Nickname]) AND ([f.Commander.DefeatedBy.Reports].[LeaderSquadId] = [t3].[SquadId])
 WHERE [f.Commander.DefeatedBy.Reports].[Discriminator] IN (N'Officer', N'Gear')
-ORDER BY [t3].[Nickname], [t3].[SquadId]");
+ORDER BY [t3].[Id], [t3].[Nickname], [t3].[SquadId]");
         }
 
         public override void Include_reference_on_derived_type_using_string()

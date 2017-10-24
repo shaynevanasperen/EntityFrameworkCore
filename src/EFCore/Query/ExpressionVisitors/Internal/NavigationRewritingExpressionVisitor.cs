@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -694,9 +695,9 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
 
                     return newOperand != correlatedCollectionMarkingExpression.Operand
                         ? new CorrelatedCollectionMarkingExpression(
-                            newOperand, 
-                            correlatedCollectionMarkingExpression.OriginQuerySource, 
-                            correlatedCollectionMarkingExpression.FirstNavigation, 
+                            newOperand,
+                            correlatedCollectionMarkingExpression.OriginQuerySource,
+                            correlatedCollectionMarkingExpression.FirstNavigation,
                             correlatedCollectionMarkingExpression.LastNavigation)
                         : correlatedCollectionMarkingExpression;
                 }
@@ -1054,7 +1055,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                         return propertyCreator(querySourceReferenceExpression);
                     }
                     else
-                    { 
+                    {
                         _queryModel.MainFromClause.FromExpression
                             = NullAsyncQueryProvider.Instance.CreateEntityQueryableExpression(targetEntityType.ClrType);
 
@@ -1413,7 +1414,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
             {
                 if (!propertyExpression.Type.IsNullableType())
                 {
-                    propertyExpression = Expression.Convert(propertyExpression, propertyExpression.Type.MakeNullable()); 
+                    propertyExpression = Expression.Convert(propertyExpression, propertyExpression.Type.MakeNullable());
                 }
 
                 return Expression.Condition(
@@ -1677,408 +1678,408 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
             //    queryModel.TransformExpressions(subqueryCorrelatingExpressionVisitor.Visit);
             //}
 
-//            private class SubqueryCorrelatingExpressionVisitor : RelinqExpressionVisitor
-//            {
-//                private readonly EntityQueryModelVisitor _queryModelVisitor;
-//                private QueryModel _queryModel;
-
-//                public SubqueryCorrelatingExpressionVisitor(EntityQueryModelVisitor queryModelVisitor, QueryModel queryModel)
-//                {
-//                    _queryModelVisitor = queryModelVisitor;
-//                    _queryModel = queryModel;
-//                }
-
-//                // todo: dry
-//                private class QuerySourceReferenceFindingExpressionTreeVisitor : RelinqExpressionVisitor
-//                {
-//                    public QuerySourceReferenceExpression QuerySourceReferenceExpression { get; private set; }
-
-//                    protected override Expression VisitQuerySourceReference(QuerySourceReferenceExpression querySourceReferenceExpression)
-//                    {
-//                        if (QuerySourceReferenceExpression == null)
-//                        {
-//                            QuerySourceReferenceExpression = querySourceReferenceExpression;
-//                        }
-
-//                        return querySourceReferenceExpression;
-//                    }
-//                }
-
-
-
-
-//                protected override Expression VisitMethodCall(MethodCallExpression node)
-//                {
-//                    //if (node.Method.MethodIsClosedFormOf(_materializeCorrelatedSubqueryMethodInfo))
-//                    //{
-//                    //    return node;
-//                    //}
-
-//                    if (node.Method.Name.StartsWith("IncludeCollection"))
-//                    {
-//                        return node;
-//                    }
-
-//                    return base.VisitMethodCall(node);
-//                }
-
-
-
-//                protected override Expression VisitExtension(Expression node)
-//                {
-//                    if (node is CorrelatedCollectionMarkingExpression correlatedCollectionMarkingExpression)
-//                    {
-//                        return _queryModelVisitor.BindNavigationPathPropertyExpression(
-//                            correlatedCollectionMarkingExpression.Operand.QueryModel.MainFromClause.FromExpression,
-//                            (properties, querySource) =>
-//                            {
-//                                var collectionNavigation = properties.OfType<INavigation>().SingleOrDefault(n => n.IsCollection());
-
-//                                return CorrelateSubquery2(
-//                                    new QuerySourceReferenceExpression(correlatedCollectionMarkingExpression.OriginQuerySource),
-//                                    new QuerySourceReferenceExpression(querySource),
-//                                    correlatedCollectionMarkingExpression.FirstNavigation,
-//                                    correlatedCollectionMarkingExpression.LastNavigation,
-//                                    correlatedCollectionMarkingExpression.Operand);
-
-//                                //return properties.Count == 1 && collectionNavigation != null
-//                                //    ? CorrelateSubquery2(new QuerySourceReferenceExpression(querySource), collectionNavigation, expression)
-//                                //    : default;
-//                            });
+            //            private class SubqueryCorrelatingExpressionVisitor : RelinqExpressionVisitor
+            //            {
+            //                private readonly EntityQueryModelVisitor _queryModelVisitor;
+            //                private QueryModel _queryModel;
+
+            //                public SubqueryCorrelatingExpressionVisitor(EntityQueryModelVisitor queryModelVisitor, QueryModel queryModel)
+            //                {
+            //                    _queryModelVisitor = queryModelVisitor;
+            //                    _queryModel = queryModel;
+            //                }
+
+            //                // todo: dry
+            //                private class QuerySourceReferenceFindingExpressionTreeVisitor : RelinqExpressionVisitor
+            //                {
+            //                    public QuerySourceReferenceExpression QuerySourceReferenceExpression { get; private set; }
+
+            //                    protected override Expression VisitQuerySourceReference(QuerySourceReferenceExpression querySourceReferenceExpression)
+            //                    {
+            //                        if (QuerySourceReferenceExpression == null)
+            //                        {
+            //                            QuerySourceReferenceExpression = querySourceReferenceExpression;
+            //                        }
+
+            //                        return querySourceReferenceExpression;
+            //                    }
+            //                }
+
+
+
+
+            //                protected override Expression VisitMethodCall(MethodCallExpression node)
+            //                {
+            //                    //if (node.Method.MethodIsClosedFormOf(_materializeCorrelatedSubqueryMethodInfo))
+            //                    //{
+            //                    //    return node;
+            //                    //}
+
+            //                    if (node.Method.Name.StartsWith("IncludeCollection"))
+            //                    {
+            //                        return node;
+            //                    }
+
+            //                    return base.VisitMethodCall(node);
+            //                }
+
+
+
+            //                protected override Expression VisitExtension(Expression node)
+            //                {
+            //                    if (node is CorrelatedCollectionMarkingExpression correlatedCollectionMarkingExpression)
+            //                    {
+            //                        return _queryModelVisitor.BindNavigationPathPropertyExpression(
+            //                            correlatedCollectionMarkingExpression.Operand.QueryModel.MainFromClause.FromExpression,
+            //                            (properties, querySource) =>
+            //                            {
+            //                                var collectionNavigation = properties.OfType<INavigation>().SingleOrDefault(n => n.IsCollection());
+
+            //                                return CorrelateSubquery2(
+            //                                    new QuerySourceReferenceExpression(correlatedCollectionMarkingExpression.OriginQuerySource),
+            //                                    new QuerySourceReferenceExpression(querySource),
+            //                                    correlatedCollectionMarkingExpression.FirstNavigation,
+            //                                    correlatedCollectionMarkingExpression.LastNavigation,
+            //                                    correlatedCollectionMarkingExpression.Operand);
+
+            //                                //return properties.Count == 1 && collectionNavigation != null
+            //                                //    ? CorrelateSubquery2(new QuerySourceReferenceExpression(querySource), collectionNavigation, expression)
+            //                                //    : default;
+            //                            });
 
-
+
 
 
 
-//                    }
+            //                    }
 
-//                    return base.VisitExtension(node);
-//                }
+            //                    return base.VisitExtension(node);
+            //                }
 
-//                //protected override Expression VisitSubQuery(SubQueryExpression expression)
-//                //{
-//                //    var subQueryModel = expression.QueryModel;
-//                //    if (subQueryModel.ResultOperators.Count == 0
-//                //        && subQueryModel.SelectClause.Selector is QuerySourceReferenceExpression selectorQsre
-//                //        && selectorQsre.ReferencedQuerySource == subQueryModel.MainFromClause
-//                //        && subQueryModel.MainFromClause.FromExpression is MemberExpression fromMemberExpression)
-//                //    {
-//                //        var newMemberExpression = _queryModelVisitor.BindNavigationPathPropertyExpression(
-//                //            fromMemberExpression,
-//                //            (properties, querySource) =>
-//                //            {
-//                //                var collectionNavigation = properties.OfType<INavigation>().SingleOrDefault(n => n.IsCollection());
-
-//                //                return properties.Count == 1 && collectionNavigation != null
-//                //                    ? CorrelateSubquery2(new QuerySourceReferenceExpression(querySource), collectionNavigation, expression)
-//                //                    : default;
-//                //            });
+            //                //protected override Expression VisitSubQuery(SubQueryExpression expression)
+            //                //{
+            //                //    var subQueryModel = expression.QueryModel;
+            //                //    if (subQueryModel.ResultOperators.Count == 0
+            //                //        && subQueryModel.SelectClause.Selector is QuerySourceReferenceExpression selectorQsre
+            //                //        && selectorQsre.ReferencedQuerySource == subQueryModel.MainFromClause
+            //                //        && subQueryModel.MainFromClause.FromExpression is MemberExpression fromMemberExpression)
+            //                //    {
+            //                //        var newMemberExpression = _queryModelVisitor.BindNavigationPathPropertyExpression(
+            //                //            fromMemberExpression,
+            //                //            (properties, querySource) =>
+            //                //            {
+            //                //                var collectionNavigation = properties.OfType<INavigation>().SingleOrDefault(n => n.IsCollection());
+
+            //                //                return properties.Count == 1 && collectionNavigation != null
+            //                //                    ? CorrelateSubquery2(new QuerySourceReferenceExpression(querySource), collectionNavigation, expression)
+            //                //                    : default;
+            //                //            });
 
-//                //        if (newMemberExpression != null)
-//                //        {
-//                //            return newMemberExpression;
-//                //        }
-//                //    }
+            //                //        if (newMemberExpression != null)
+            //                //        {
+            //                //            return newMemberExpression;
+            //                //        }
+            //                //    }
 
-//                //    if (subQueryModel.ResultOperators.Count == 0)
-//                //        //&& (subQueryModel.MainFromClause.FromExpression is MemberExpression 
-//                //        //    || (subQueryModel.MainFromClause.FromExpression as MethodCallExpression)?.IsEFProperty()))
-//                //    {
-//                //        var querySourceReferenceFindingExpressionTreeVisitor
-//                //            = new QuerySourceReferenceFindingExpressionTreeVisitor();
+            //                //    if (subQueryModel.ResultOperators.Count == 0)
+            //                //        //&& (subQueryModel.MainFromClause.FromExpression is MemberExpression 
+            //                //        //    || (subQueryModel.MainFromClause.FromExpression as MethodCallExpression)?.IsEFProperty()))
+            //                //    {
+            //                //        var querySourceReferenceFindingExpressionTreeVisitor
+            //                //            = new QuerySourceReferenceFindingExpressionTreeVisitor();
 
-//                //        querySourceReferenceFindingExpressionTreeVisitor.Visit(subQueryModel.SelectClause.Selector);
-//                //        if (querySourceReferenceFindingExpressionTreeVisitor.QuerySourceReferenceExpression.ReferencedQuerySource == subQueryModel.MainFromClause)
-//                //        {
-//                //            var newMemberExpression = _queryModelVisitor.BindNavigationPathPropertyExpression(
-//                //            subQueryModel.MainFromClause.FromExpression,
-//                //            (properties, querySource) =>
-//                //            {
-//                //                var collectionNavigation = properties.OfType<INavigation>().SingleOrDefault(n => n.IsCollection());
+            //                //        querySourceReferenceFindingExpressionTreeVisitor.Visit(subQueryModel.SelectClause.Selector);
+            //                //        if (querySourceReferenceFindingExpressionTreeVisitor.QuerySourceReferenceExpression.ReferencedQuerySource == subQueryModel.MainFromClause)
+            //                //        {
+            //                //            var newMemberExpression = _queryModelVisitor.BindNavigationPathPropertyExpression(
+            //                //            subQueryModel.MainFromClause.FromExpression,
+            //                //            (properties, querySource) =>
+            //                //            {
+            //                //                var collectionNavigation = properties.OfType<INavigation>().SingleOrDefault(n => n.IsCollection());
 
-//                //                return properties.Count == 1 && collectionNavigation != null // TODO: no navigation chaining for now
-//                //                    ? CorrelateSubquery2(new QuerySourceReferenceExpression(querySource), collectionNavigation, expression)
-//                //                    : default;
-//                //            });
-
-//                //            if (newMemberExpression != null)
-//                //            {
-//                //                return newMemberExpression;
-//                //            }
-//                //        }
-//                //    }
+            //                //                return properties.Count == 1 && collectionNavigation != null // TODO: no navigation chaining for now
+            //                //                    ? CorrelateSubquery2(new QuerySourceReferenceExpression(querySource), collectionNavigation, expression)
+            //                //                    : default;
+            //                //            });
+
+            //                //            if (newMemberExpression != null)
+            //                //            {
+            //                //                return newMemberExpression;
+            //                //            }
+            //                //        }
+            //                //    }
 
-//                //    return base.VisitSubQuery(expression);
-//                //}
-
-
-//                private static MethodInfo _correlateSubqueryMethodInfo = typeof(IQueryBuffer).GetMethod(nameof(IQueryBuffer.CorrelateSubquery));
-
-
-
-//                private Expression CorrelateSubquery2(
-//                    QuerySourceReferenceExpression originQuerySourceExpression,
-//                    QuerySourceReferenceExpression outerExpression,
-//                    INavigation firstNavigation,
-//                    INavigation collectionNavigation, 
-//                    SubQueryExpression subQueryExpression)
-//                {
-//                    var subQueryModel = subQueryExpression.QueryModel;
-
-//                    var outerKey = BuildKeyAccess(collectionNavigation.ForeignKey.PrincipalKey.Properties, outerExpression);
-//                    var innerKey = BuildKeyAccess(collectionNavigation.ForeignKey.Properties, new QuerySourceReferenceExpression(subQueryModel.MainFromClause));
-//                    var correlationnPredicate = CreateCorrelationPredicate(collectionNavigation);
-
-//                    var subQueryResultElementType = subQueryModel.SelectClause.Selector.Type;
-
-//                    var kvp = typeof(KeyValuePair<,>).MakeGenericType(subQueryResultElementType, typeof(AnonymousObject2));
-//                    var kvpCtor = kvp.GetTypeInfo().DeclaredConstructors.FirstOrDefault();
-
-//                    var kvp2 = typeof(KeyValuePair<,>).MakeGenericType(kvp, typeof(AnonymousObject2));
-//                    var kvp2Ctor = kvp2.GetTypeInfo().DeclaredConstructors.FirstOrDefault();
-
-//                    var originEntityType = _queryModelVisitor.QueryCompilationContext.Model.FindEntityType(originQuerySourceExpression.Type);
-//                    var originKey = BuildKeyAccess(originEntityType.FindPrimaryKey().Properties, originQuerySourceExpression);
-
-
-
-//                    subQueryModel.SelectClause.Selector = Expression.New(
-//                        kvp2Ctor,
-//                        Expression.New(kvpCtor, subQueryModel.SelectClause.Selector, innerKey),
-//                        originKey);
-
-//                    //subQueryModel.SelectClause.Selector = Expression.New(kvpCtor, subQueryModel.SelectClause.Selector, innerKey);
-//                    subQueryModel.ResultTypeOverride = typeof(IEnumerable<>).MakeGenericType(subQueryModel.SelectClause.Selector.Type);
-
-
-//                    var arguments = new List<Expression>
-//                    {
-//                        Expression.Constant(1), // TODO: fix this!
-//                        originQuerySourceExpression,
-//                        Expression.Constant(collectionNavigation),
-//                        Expression.Constant(firstNavigation),
-//                        outerKey,
-//                        Expression.Lambda(new SubQueryExpression(subQueryModel)), 
-//                        correlationnPredicate
-//                    };
+            //                //    return base.VisitSubQuery(expression);
+            //                //}
+
+
+            //                private static MethodInfo _correlateSubqueryMethodInfo = typeof(IQueryBuffer).GetMethod(nameof(IQueryBuffer.CorrelateSubquery));
+
+
+
+            //                private Expression CorrelateSubquery2(
+            //                    QuerySourceReferenceExpression originQuerySourceExpression,
+            //                    QuerySourceReferenceExpression outerExpression,
+            //                    INavigation firstNavigation,
+            //                    INavigation collectionNavigation, 
+            //                    SubQueryExpression subQueryExpression)
+            //                {
+            //                    var subQueryModel = subQueryExpression.QueryModel;
+
+            //                    var outerKey = BuildKeyAccess(collectionNavigation.ForeignKey.PrincipalKey.Properties, outerExpression);
+            //                    var innerKey = BuildKeyAccess(collectionNavigation.ForeignKey.Properties, new QuerySourceReferenceExpression(subQueryModel.MainFromClause));
+            //                    var correlationnPredicate = CreateCorrelationPredicate(collectionNavigation);
+
+            //                    var subQueryResultElementType = subQueryModel.SelectClause.Selector.Type;
+
+            //                    var kvp = typeof(KeyValuePair<,>).MakeGenericType(subQueryResultElementType, typeof(AnonymousObject2));
+            //                    var kvpCtor = kvp.GetTypeInfo().DeclaredConstructors.FirstOrDefault();
+
+            //                    var kvp2 = typeof(KeyValuePair<,>).MakeGenericType(kvp, typeof(AnonymousObject2));
+            //                    var kvp2Ctor = kvp2.GetTypeInfo().DeclaredConstructors.FirstOrDefault();
+
+            //                    var originEntityType = _queryModelVisitor.QueryCompilationContext.Model.FindEntityType(originQuerySourceExpression.Type);
+            //                    var originKey = BuildKeyAccess(originEntityType.FindPrimaryKey().Properties, originQuerySourceExpression);
+
+
+
+            //                    subQueryModel.SelectClause.Selector = Expression.New(
+            //                        kvp2Ctor,
+            //                        Expression.New(kvpCtor, subQueryModel.SelectClause.Selector, innerKey),
+            //                        originKey);
+
+            //                    //subQueryModel.SelectClause.Selector = Expression.New(kvpCtor, subQueryModel.SelectClause.Selector, innerKey);
+            //                    subQueryModel.ResultTypeOverride = typeof(IEnumerable<>).MakeGenericType(subQueryModel.SelectClause.Selector.Type);
+
+
+            //                    var arguments = new List<Expression>
+            //                    {
+            //                        Expression.Constant(1), // TODO: fix this!
+            //                        originQuerySourceExpression,
+            //                        Expression.Constant(collectionNavigation),
+            //                        Expression.Constant(firstNavigation),
+            //                        outerKey,
+            //                        Expression.Lambda(new SubQueryExpression(subQueryModel)), 
+            //                        correlationnPredicate
+            //                    };
 
-//                    var generic = _correlateSubqueryMethodInfo.MakeGenericMethod(subQueryResultElementType);
+            //                    var generic = _correlateSubqueryMethodInfo.MakeGenericMethod(subQueryResultElementType);
 
-//                    var result = Expression.Call(
-//                        Expression.Property(
-//                            EntityQueryModelVisitor.QueryContextParameter,
-//                            nameof(QueryContext.QueryBuffer)),
-//                        generic,
-//                        arguments);
+            //                    var result = Expression.Call(
+            //                        Expression.Property(
+            //                            EntityQueryModelVisitor.QueryContextParameter,
+            //                            nameof(QueryContext.QueryBuffer)),
+            //                        generic,
+            //                        arguments);
 
-//                    return result;
+            //                    return result;
 
-//                    //// TODO: needed?
-//                    //var resultCollectionType = collectionNavigation.GetCollectionAccessor().CollectionType;
+            //                    //// TODO: needed?
+            //                    //var resultCollectionType = collectionNavigation.GetCollectionAccessor().CollectionType;
 
-//                    //return resultCollectionType.GetTypeInfo().IsGenericType && resultCollectionType.GetGenericTypeDefinition() == typeof(ICollection<>)
-//                    //    ? (Expression)result
-//                    //    : Expression.Convert(result, resultCollectionType);
-//                }
+            //                    //return resultCollectionType.GetTypeInfo().IsGenericType && resultCollectionType.GetGenericTypeDefinition() == typeof(ICollection<>)
+            //                    //    ? (Expression)result
+            //                    //    : Expression.Convert(result, resultCollectionType);
+            //                }
 
-//            //    private Expression CorrelateSubquery(QuerySourceReferenceExpression outerExpression, INavigation collectionNavigation, Expression subqueryExpression)
-//            //    {
-//            //        var outerKey = BuildOuterKey(collectionNavigation, outerExpression);
+            //            //    private Expression CorrelateSubquery(QuerySourceReferenceExpression outerExpression, INavigation collectionNavigation, Expression subqueryExpression)
+            //            //    {
+            //            //        var outerKey = BuildOuterKey(collectionNavigation, outerExpression);
 
-//            //        var correlationnPredicate = TryCreateCorrelationPredicate(collectionNavigation.DeclaringEntityType.ClrType, collectionNavigation);
+            //            //        var correlationnPredicate = TryCreateCorrelationPredicate(collectionNavigation.DeclaringEntityType.ClrType, collectionNavigation);
 
-//            //        if (correlationnPredicate is DefaultExpression)
-//            //        {
-//            //            return null;
-//            //        }
+            //            //        if (correlationnPredicate is DefaultExpression)
+            //            //        {
+            //            //            return null;
+            //            //        }
 
-//            //        var arguments = new List<Expression>
-//            //        {
-//            //            Expression.Constant(1),
-//            //            Expression.Constant(collectionNavigation/*.GetCollectionAccessor()*/),
-//            //            //Expression.Constant(collectionNavigation.GetCollectionAccessor()),
-//            //            outerKey,
-//            //            Expression.Lambda(subqueryExpression),
-//            //            correlationnPredicate
-//            //        };
+            //            //        var arguments = new List<Expression>
+            //            //        {
+            //            //            Expression.Constant(1),
+            //            //            Expression.Constant(collectionNavigation/*.GetCollectionAccessor()*/),
+            //            //            //Expression.Constant(collectionNavigation.GetCollectionAccessor()),
+            //            //            outerKey,
+            //            //            Expression.Lambda(subqueryExpression),
+            //            //            correlationnPredicate
+            //            //        };
 
-//            //        var targetType = collectionNavigation.GetTargetType().ClrType;
-
-//            //        var generic = _materializeCorrelatedSubqueryMethodInfo.MakeGenericMethod(targetType);
-//            //        //var generic = _materializeCorrelatedSubqueryMethodInfo.MakeGenericMethod(collectionNavigation.GetTargetType().ClrType);
-
-//            //        var result = Expression.Call(
-//            //            Expression.Property(
-//            //                EntityQueryModelVisitor.QueryContextParameter,
-//            //                nameof(QueryContext.QueryBuffer)),
-//            //            generic,
-//            //            arguments);
-
-//            //        /*
-//            //         * 
-//            //         * 
-//            //         * 
-//            //         *             int childId,
-//            //IClrCollectionAccessor clrCollectionAccessor,
-//            //TOuter outer,
-//            //Func<IEnumerable<TInner>> relatedEntitiesFactory,
-//            //Func<TOuter, TInner, bool> joinPredicate)
-//            //         * 
-//            //         * 
-//            //         * 
-//            //         */
-
-//            //        var resultCollectionType = collectionNavigation.GetCollectionAccessor().CollectionType;
-
-//            //        //TODO: not needed?
-//            //        result = Expression.Call(
-//            //             CollectionNavigationSubqueryInjector.MaterializeCollectionNavigationMethodInfo.MakeGenericMethod(targetType),
-//            //            Expression.Constant(collectionNavigation), /*subqueryExpression*/result);
-
-//            //        return resultCollectionType.GetTypeInfo().IsGenericType && resultCollectionType.GetGenericTypeDefinition() == typeof(ICollection<>)
-//            //            ? (Expression)result
-//            //            : Expression.Convert(result, resultCollectionType);
-
-
-
-
-//            //        //return result;
-//            //        //var targetType = collectionNavigation.GetTargetType().ClrType;
-//            //        //var mainFromClause = new MainFromClause(targetType.Name.Substring(0, 1).ToLowerInvariant(), targetType, expression);
-//            //        //var selector = new QuerySourceReferenceExpression(mainFromClause);
-
-//            //        //var subqueryModel = new QueryModel(mainFromClause, new SelectClause(selector));
-//            //        //var subqueryExpression = new SubQueryExpression(subqueryModel);
-
-//            //        //var resultCollectionType = collectionNavigation.GetCollectionAccessor().CollectionType;
-
-//            //        //var result = Expression.Call(
-//            //        //    MaterializeCollectionNavigationMethodInfo.MakeGenericMethod(targetType),
-//            //        //    Expression.Constant(collectionNavigation), subqueryExpression);
-
-//            //        //return resultCollectionType.GetTypeInfo().IsGenericType && resultCollectionType.GetGenericTypeDefinition() == typeof(ICollection<>)
-//            //        //    ? (Expression)result
-//            //        //    : Expression.Convert(result, resultCollectionType);
-//            //    }
-
-
-
-//                private static Expression BuildKeyAccess(IEnumerable<IProperty> keyProperties, Expression qsre)
-//                {
-//                    var keyAccessExpressions = keyProperties.Select(p => qsre.CreateEFPropertyExpression(p)).ToArray();
-
-////                    var keyAccessExpressions = keyProperties.Select(p => Expression.MakeMemberAccess(qsre, p.GetMemberInfo(forConstruction: false, forSet: false))).ToArray();
+            //            //        var targetType = collectionNavigation.GetTargetType().ClrType;
+
+            //            //        var generic = _materializeCorrelatedSubqueryMethodInfo.MakeGenericMethod(targetType);
+            //            //        //var generic = _materializeCorrelatedSubqueryMethodInfo.MakeGenericMethod(collectionNavigation.GetTargetType().ClrType);
+
+            //            //        var result = Expression.Call(
+            //            //            Expression.Property(
+            //            //                EntityQueryModelVisitor.QueryContextParameter,
+            //            //                nameof(QueryContext.QueryBuffer)),
+            //            //            generic,
+            //            //            arguments);
+
+            //            //        /*
+            //            //         * 
+            //            //         * 
+            //            //         * 
+            //            //         *             int childId,
+            //            //IClrCollectionAccessor clrCollectionAccessor,
+            //            //TOuter outer,
+            //            //Func<IEnumerable<TInner>> relatedEntitiesFactory,
+            //            //Func<TOuter, TInner, bool> joinPredicate)
+            //            //         * 
+            //            //         * 
+            //            //         * 
+            //            //         */
+
+            //            //        var resultCollectionType = collectionNavigation.GetCollectionAccessor().CollectionType;
+
+            //            //        //TODO: not needed?
+            //            //        result = Expression.Call(
+            //            //             CollectionNavigationSubqueryInjector.MaterializeCollectionNavigationMethodInfo.MakeGenericMethod(targetType),
+            //            //            Expression.Constant(collectionNavigation), /*subqueryExpression*/result);
+
+            //            //        return resultCollectionType.GetTypeInfo().IsGenericType && resultCollectionType.GetGenericTypeDefinition() == typeof(ICollection<>)
+            //            //            ? (Expression)result
+            //            //            : Expression.Convert(result, resultCollectionType);
+
+
+
+
+            //            //        //return result;
+            //            //        //var targetType = collectionNavigation.GetTargetType().ClrType;
+            //            //        //var mainFromClause = new MainFromClause(targetType.Name.Substring(0, 1).ToLowerInvariant(), targetType, expression);
+            //            //        //var selector = new QuerySourceReferenceExpression(mainFromClause);
+
+            //            //        //var subqueryModel = new QueryModel(mainFromClause, new SelectClause(selector));
+            //            //        //var subqueryExpression = new SubQueryExpression(subqueryModel);
+
+            //            //        //var resultCollectionType = collectionNavigation.GetCollectionAccessor().CollectionType;
+
+            //            //        //var result = Expression.Call(
+            //            //        //    MaterializeCollectionNavigationMethodInfo.MakeGenericMethod(targetType),
+            //            //        //    Expression.Constant(collectionNavigation), subqueryExpression);
+
+            //            //        //return resultCollectionType.GetTypeInfo().IsGenericType && resultCollectionType.GetGenericTypeDefinition() == typeof(ICollection<>)
+            //            //        //    ? (Expression)result
+            //            //        //    : Expression.Convert(result, resultCollectionType);
+            //            //    }
+
+
+
+            //                private static Expression BuildKeyAccess(IEnumerable<IProperty> keyProperties, Expression qsre)
+            //                {
+            //                    var keyAccessExpressions = keyProperties.Select(p => qsre.CreateEFPropertyExpression(p)).ToArray();
+
+            ////                    var keyAccessExpressions = keyProperties.Select(p => Expression.MakeMemberAccess(qsre, p.GetMemberInfo(forConstruction: false, forSet: false))).ToArray();
 
-//                    return Expression.New(
-//                        AnonymousObject2.AnonymousObjectCtor,
-//                        Expression.NewArrayInit(
-//                            typeof(object),
-//                            keyAccessExpressions.Select(k => Expression.Convert(k, typeof(object)))));
-//                }
-
-//                private static Expression BuildOuterKey(INavigation navigation, Expression outerQsre)
-//                {
-//                    var foreignKey = navigation.ForeignKey;
-//                    var primaryKeyProperties = foreignKey.PrincipalKey.Properties;
-
-//                    var pks = primaryKeyProperties.Select(p => Expression.MakeMemberAccess(outerQsre, p.GetMemberInfo(forConstruction: false, forSet: false))).ToArray();
-
-//                    return Expression.New(
-//                        AnonymousObject.AnonymousObjectCtor,
-//                        Expression.NewArrayInit(
-//                            typeof(object),
-//                            pks.Select(k => Expression.Convert(k, typeof(object)))));
-//                }
+            //                    return Expression.New(
+            //                        AnonymousObject2.AnonymousObjectCtor,
+            //                        Expression.NewArrayInit(
+            //                            typeof(object),
+            //                            keyAccessExpressions.Select(k => Expression.Convert(k, typeof(object)))));
+            //                }
+
+            //                private static Expression BuildOuterKey(INavigation navigation, Expression outerQsre)
+            //                {
+            //                    var foreignKey = navigation.ForeignKey;
+            //                    var primaryKeyProperties = foreignKey.PrincipalKey.Properties;
+
+            //                    var pks = primaryKeyProperties.Select(p => Expression.MakeMemberAccess(outerQsre, p.GetMemberInfo(forConstruction: false, forSet: false))).ToArray();
+
+            //                    return Expression.New(
+            //                        AnonymousObject.AnonymousObjectCtor,
+            //                        Expression.NewArrayInit(
+            //                            typeof(object),
+            //                            pks.Select(k => Expression.Convert(k, typeof(object)))));
+            //                }
 
-//                private static Expression CreateCorrelationPredicate(INavigation navigation)
-//                {
-//                    var foreignKey = navigation.ForeignKey;
-//                    var primaryKeyProperties = foreignKey.PrincipalKey.Properties;
-//                    var foreignKeyProperties = foreignKey.Properties;
+            //                private static Expression CreateCorrelationPredicate(INavigation navigation)
+            //                {
+            //                    var foreignKey = navigation.ForeignKey;
+            //                    var primaryKeyProperties = foreignKey.PrincipalKey.Properties;
+            //                    var foreignKeyProperties = foreignKey.Properties;
 
-//                    var outerKeyParameter = Expression.Parameter(typeof(AnonymousObject2), "o");
-//                    var innerKeyParameter = Expression.Parameter(typeof(AnonymousObject2), "i");
+            //                    var outerKeyParameter = Expression.Parameter(typeof(AnonymousObject2), "o");
+            //                    var innerKeyParameter = Expression.Parameter(typeof(AnonymousObject2), "i");
 
-//                    return Expression.Lambda(
-//                        primaryKeyProperties
-//                            .Select((pk, i) => new { pk, i })
-//                            .Zip(
-//                                foreignKeyProperties,
-//                                (outer, inner) =>
-//                                {
-//                                    //Expression outerKeyAccess =
-//                                    //    Expression.Convert(
-//                                    //        Expression.Call(
-//                                    //            outerKeyParameter,
-//                                    //            AnonymousObject.GetValueMethodInfo,
-//                                    //            Expression.Constant(outer.i)),
-//                                    //        primaryKeyProperties[outer.i].ClrType);
+            //                    return Expression.Lambda(
+            //                        primaryKeyProperties
+            //                            .Select((pk, i) => new { pk, i })
+            //                            .Zip(
+            //                                foreignKeyProperties,
+            //                                (outer, inner) =>
+            //                                {
+            //                                    //Expression outerKeyAccess =
+            //                                    //    Expression.Convert(
+            //                                    //        Expression.Call(
+            //                                    //            outerKeyParameter,
+            //                                    //            AnonymousObject.GetValueMethodInfo,
+            //                                    //            Expression.Constant(outer.i)),
+            //                                    //        primaryKeyProperties[outer.i].ClrType);
 
-//                                    var outerKeyAccess =
-//                                        Expression.Call(
-//                                            outerKeyParameter,
-//                                            AnonymousObject2.GetValueMethodInfo,
-//                                            Expression.Constant(outer.i));
+            //                                    var outerKeyAccess =
+            //                                        Expression.Call(
+            //                                            outerKeyParameter,
+            //                                            AnonymousObject2.GetValueMethodInfo,
+            //                                            Expression.Constant(outer.i));
 
-//                                    var typedOuterKeyAccess = 
-//                                        Expression.Convert(
-//                                            outerKeyAccess,
-//                                            primaryKeyProperties[outer.i].ClrType);
+            //                                    var typedOuterKeyAccess = 
+            //                                        Expression.Convert(
+            //                                            outerKeyAccess,
+            //                                            primaryKeyProperties[outer.i].ClrType);
 
-//                                    //Expression innerKeyAccess =
-//                                    //    Expression.Convert(
-//                                    //        Expression.Call(
-//                                    //            innerKeyParameter,
-//                                    //            AnonymousObject.GetValueMethodInfo,
-//                                    //            Expression.Constant(outer.i)),
-//                                    //        foreignKeyProperties[outer.i].ClrType);
+            //                                    //Expression innerKeyAccess =
+            //                                    //    Expression.Convert(
+            //                                    //        Expression.Call(
+            //                                    //            innerKeyParameter,
+            //                                    //            AnonymousObject.GetValueMethodInfo,
+            //                                    //            Expression.Constant(outer.i)),
+            //                                    //        foreignKeyProperties[outer.i].ClrType);
 
-//                                    var innerKeyAccess =
-//                                        Expression.Call(
-//                                            innerKeyParameter,
-//                                            AnonymousObject2.GetValueMethodInfo,
-//                                            Expression.Constant(outer.i));
+            //                                    var innerKeyAccess =
+            //                                        Expression.Call(
+            //                                            innerKeyParameter,
+            //                                            AnonymousObject2.GetValueMethodInfo,
+            //                                            Expression.Constant(outer.i));
 
-//                                    var typedInnerKeyAccess =
-//                                        Expression.Convert(
-//                                            innerKeyAccess,
-//                                            foreignKeyProperties[outer.i].ClrType);
-
-
-
-
-
-
+            //                                    var typedInnerKeyAccess =
+            //                                        Expression.Convert(
+            //                                            innerKeyAccess,
+            //                                            foreignKeyProperties[outer.i].ClrType);
+
+
+
+
+
+
 
-//                                    //Expression equalityExpression;
-//                                    //if (outerKeyAccess.Type != innerKeyAccess.Type)
-//                                    //{
-//                                    //    if (outerKeyAccess.Type.IsNullableType())
-//                                    //    {
-//                                    //        innerKeyAccess = Expression.Convert(innerKeyAccess, outerKeyAccess.Type);
-//                                    //    }
-//                                    //    else
-//                                    //    {
-//                                    //        outerKeyAccess = Expression.Convert(outerKeyAccess, innerKeyAccess.Type);
-//                                    //    }
-//                                    //}
+            //                                    //Expression equalityExpression;
+            //                                    //if (outerKeyAccess.Type != innerKeyAccess.Type)
+            //                                    //{
+            //                                    //    if (outerKeyAccess.Type.IsNullableType())
+            //                                    //    {
+            //                                    //        innerKeyAccess = Expression.Convert(innerKeyAccess, outerKeyAccess.Type);
+            //                                    //    }
+            //                                    //    else
+            //                                    //    {
+            //                                    //        outerKeyAccess = Expression.Convert(outerKeyAccess, innerKeyAccess.Type);
+            //                                    //    }
+            //                                    //}
 
 
 
 
 
-//                                    Expression equalityExpression;
-//                                    if (typedOuterKeyAccess.Type != typedInnerKeyAccess.Type)
-//                                    {
-//                                        if (typedOuterKeyAccess.Type.IsNullableType())
-//                                        {
-//                                            typedInnerKeyAccess = Expression.Convert(typedInnerKeyAccess, typedOuterKeyAccess.Type);
-//                                        }
-//                                        else
-//                                        {
-//                                            typedOuterKeyAccess = Expression.Convert(typedOuterKeyAccess, typedInnerKeyAccess.Type);
-//                                        }
-//                                    }
+            //                                    Expression equalityExpression;
+            //                                    if (typedOuterKeyAccess.Type != typedInnerKeyAccess.Type)
+            //                                    {
+            //                                        if (typedOuterKeyAccess.Type.IsNullableType())
+            //                                        {
+            //                                            typedInnerKeyAccess = Expression.Convert(typedInnerKeyAccess, typedOuterKeyAccess.Type);
+            //                                        }
+            //                                        else
+            //                                        {
+            //                                            typedOuterKeyAccess = Expression.Convert(typedOuterKeyAccess, typedInnerKeyAccess.Type);
+            //                                        }
+            //                                    }
 
 
 
@@ -2090,123 +2091,123 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
 
 
 
-
-
-//                                    //if (typeof(IStructuralEquatable).GetTypeInfo()
-//                                    //    .IsAssignableFrom(pkMemberAccess.Type.GetTypeInfo()))
-//                                    //{
-//                                    //    equalityExpression
-//                                    //        = Expression.Call(_structuralEqualsMethod, pkMemberAccess, fkMemberAccess);
-//                                    //}
-//                                    //else
-//                                    {
-//                                        //equalityExpression = Expression.Equal(outerKeyAccess, innerKeyAccess);
-//                                        equalityExpression = Expression.Equal(typedOuterKeyAccess, typedInnerKeyAccess);
-//                                    }
-
-//                                    return inner.ClrType.IsNullableType()
-//                                        ? Expression.Condition(
-//                                            Expression.OrElse(
-//                                                Expression.Equal(innerKeyAccess, Expression.Default(innerKeyAccess.Type)),
-//                                                Expression.Equal(outerKeyAccess, Expression.Default(outerKeyAccess.Type)))
-//                                                ,
-//                                            //Expression.Equal(innerKeyAccess, Expression.Constant(null)),
-//                                            Expression.Constant(false),
-//                                            equalityExpression)
-//                                        : equalityExpression;
-//                                })
-//                            .Aggregate((e1, e2) => Expression.AndAlso(e1, e2)),
-//                        outerKeyParameter,
-//                        innerKeyParameter);
-//                }
-
-//                private static Expression TryCreateCorrelationPredicate(Type targetType, INavigation navigation)
-//                {
-//                    var foreignKey = navigation.ForeignKey;
-//                    var primaryKeyProperties = foreignKey.PrincipalKey.Properties;
-//                    var foreignKeyProperties = foreignKey.Properties;
-//                    var relatedType = navigation.GetTargetType().ClrType;
-
-//                    if (primaryKeyProperties.Any(p => p.IsShadowProperty)
-//                        || foreignKeyProperties.Any(p => p.IsShadowProperty))
-//                    {
-//                        return
-//                            Expression.Default(typeof(Func<,,>)
-//                                .MakeGenericType(targetType, relatedType, typeof(bool)));
-//                    }
-
-//                    var targetEntityParameter = Expression.Parameter(typeof(AnonymousObject) /* targetType*/, "p");
-//                    var relatedEntityParameter = Expression.Parameter(relatedType, "d");
-
-//                    return Expression.Lambda(
-//                        primaryKeyProperties.Zip(foreignKeyProperties,
-//                                (pk, fk) =>
-//                                {
-//                                    Expression pkMemberAccess =
-//                                        Expression.Call(
-//                                            targetEntityParameter,
-//                                            AnonymousObject.GetValueMethodInfo,
-//                                            Expression.Constant(0)); // TODO: hack
-
-
-
-
-
-
-//                                    //Expression pkMemberAccess
-//                                    //    = Expression.MakeMemberAccess(
-//                                    //        targetEntityParameter,
-//                                    //        pk.GetMemberInfo(forConstruction: false, forSet: false));
-
-//                                    Expression fkMemberAccess
-//                                        = Expression.MakeMemberAccess(
-//                                            relatedEntityParameter,
-//                                            fk.GetMemberInfo(forConstruction: false, forSet: false));
-
-//                                    if (pkMemberAccess.Type != fkMemberAccess.Type)
-//                                    {
-//                                        // PK is always object because it comes from AnonymousObject - we need to type it correctly to avoid reference comparison
-//                                        pkMemberAccess = Expression.Convert(pkMemberAccess, fkMemberAccess.Type);
-
-
-//                                        //if (pkMemberAccess.Type.IsNullableType())
-//                                        //{
-//                                        //    fkMemberAccess = Expression.Convert(fkMemberAccess, pkMemberAccess.Type);
-//                                        //}
-//                                        //else
-//                                        //{
-//                                        //    pkMemberAccess = Expression.Convert(pkMemberAccess, fkMemberAccess.Type);
-//                                        //}
-//                                    }
-
-//                                    Expression equalityExpression;
-
-//                                    //if (typeof(IStructuralEquatable).GetTypeInfo()
-//                                    //    .IsAssignableFrom(pkMemberAccess.Type.GetTypeInfo()))
-//                                    //{
-//                                    //    equalityExpression
-//                                    //        = Expression.Call(_structuralEqualsMethod, pkMemberAccess, fkMemberAccess);
-//                                    //}
-//                                    //else
-//                                    {
-//                                        equalityExpression = Expression.Equal(pkMemberAccess, fkMemberAccess);
-//                                    }
-
-//                                    return fk.ClrType.IsNullableType()
-//                                        ? Expression.Condition(
-//                                            Expression.Equal(fkMemberAccess, Expression.Default(fk.ClrType)),
-//                                            Expression.Constant(false),
-//                                            equalityExpression)
-//                                        : equalityExpression;
-//                                })
-//                            .Aggregate((e1, e2) => Expression.AndAlso(e1, e2)),
-//                        targetEntityParameter,
-//                        relatedEntityParameter);
-//                }
-
-
-
-//            }
+
+
+            //                                    //if (typeof(IStructuralEquatable).GetTypeInfo()
+            //                                    //    .IsAssignableFrom(pkMemberAccess.Type.GetTypeInfo()))
+            //                                    //{
+            //                                    //    equalityExpression
+            //                                    //        = Expression.Call(_structuralEqualsMethod, pkMemberAccess, fkMemberAccess);
+            //                                    //}
+            //                                    //else
+            //                                    {
+            //                                        //equalityExpression = Expression.Equal(outerKeyAccess, innerKeyAccess);
+            //                                        equalityExpression = Expression.Equal(typedOuterKeyAccess, typedInnerKeyAccess);
+            //                                    }
+
+            //                                    return inner.ClrType.IsNullableType()
+            //                                        ? Expression.Condition(
+            //                                            Expression.OrElse(
+            //                                                Expression.Equal(innerKeyAccess, Expression.Default(innerKeyAccess.Type)),
+            //                                                Expression.Equal(outerKeyAccess, Expression.Default(outerKeyAccess.Type)))
+            //                                                ,
+            //                                            //Expression.Equal(innerKeyAccess, Expression.Constant(null)),
+            //                                            Expression.Constant(false),
+            //                                            equalityExpression)
+            //                                        : equalityExpression;
+            //                                })
+            //                            .Aggregate((e1, e2) => Expression.AndAlso(e1, e2)),
+            //                        outerKeyParameter,
+            //                        innerKeyParameter);
+            //                }
+
+            //                private static Expression TryCreateCorrelationPredicate(Type targetType, INavigation navigation)
+            //                {
+            //                    var foreignKey = navigation.ForeignKey;
+            //                    var primaryKeyProperties = foreignKey.PrincipalKey.Properties;
+            //                    var foreignKeyProperties = foreignKey.Properties;
+            //                    var relatedType = navigation.GetTargetType().ClrType;
+
+            //                    if (primaryKeyProperties.Any(p => p.IsShadowProperty)
+            //                        || foreignKeyProperties.Any(p => p.IsShadowProperty))
+            //                    {
+            //                        return
+            //                            Expression.Default(typeof(Func<,,>)
+            //                                .MakeGenericType(targetType, relatedType, typeof(bool)));
+            //                    }
+
+            //                    var targetEntityParameter = Expression.Parameter(typeof(AnonymousObject) /* targetType*/, "p");
+            //                    var relatedEntityParameter = Expression.Parameter(relatedType, "d");
+
+            //                    return Expression.Lambda(
+            //                        primaryKeyProperties.Zip(foreignKeyProperties,
+            //                                (pk, fk) =>
+            //                                {
+            //                                    Expression pkMemberAccess =
+            //                                        Expression.Call(
+            //                                            targetEntityParameter,
+            //                                            AnonymousObject.GetValueMethodInfo,
+            //                                            Expression.Constant(0)); // TODO: hack
+
+
+
+
+
+
+            //                                    //Expression pkMemberAccess
+            //                                    //    = Expression.MakeMemberAccess(
+            //                                    //        targetEntityParameter,
+            //                                    //        pk.GetMemberInfo(forConstruction: false, forSet: false));
+
+            //                                    Expression fkMemberAccess
+            //                                        = Expression.MakeMemberAccess(
+            //                                            relatedEntityParameter,
+            //                                            fk.GetMemberInfo(forConstruction: false, forSet: false));
+
+            //                                    if (pkMemberAccess.Type != fkMemberAccess.Type)
+            //                                    {
+            //                                        // PK is always object because it comes from AnonymousObject - we need to type it correctly to avoid reference comparison
+            //                                        pkMemberAccess = Expression.Convert(pkMemberAccess, fkMemberAccess.Type);
+
+
+            //                                        //if (pkMemberAccess.Type.IsNullableType())
+            //                                        //{
+            //                                        //    fkMemberAccess = Expression.Convert(fkMemberAccess, pkMemberAccess.Type);
+            //                                        //}
+            //                                        //else
+            //                                        //{
+            //                                        //    pkMemberAccess = Expression.Convert(pkMemberAccess, fkMemberAccess.Type);
+            //                                        //}
+            //                                    }
+
+            //                                    Expression equalityExpression;
+
+            //                                    //if (typeof(IStructuralEquatable).GetTypeInfo()
+            //                                    //    .IsAssignableFrom(pkMemberAccess.Type.GetTypeInfo()))
+            //                                    //{
+            //                                    //    equalityExpression
+            //                                    //        = Expression.Call(_structuralEqualsMethod, pkMemberAccess, fkMemberAccess);
+            //                                    //}
+            //                                    //else
+            //                                    {
+            //                                        equalityExpression = Expression.Equal(pkMemberAccess, fkMemberAccess);
+            //                                    }
+
+            //                                    return fk.ClrType.IsNullableType()
+            //                                        ? Expression.Condition(
+            //                                            Expression.Equal(fkMemberAccess, Expression.Default(fk.ClrType)),
+            //                                            Expression.Constant(false),
+            //                                            equalityExpression)
+            //                                        : equalityExpression;
+            //                                })
+            //                            .Aggregate((e1, e2) => Expression.AndAlso(e1, e2)),
+            //                        targetEntityParameter,
+            //                        relatedEntityParameter);
+            //                }
+
+
+
+            //            }
         }
 
         /// <summary>
@@ -2244,8 +2245,41 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
         {
             var correlatedCollectionMarker = new CorrelatedCollectionMarkingExpressionVisitor(_queryModelVisitor);
 
-            queryModel.TransformExpressions(correlatedCollectionMarker.Visit);
+            queryModel.SelectClause.TransformExpressions(correlatedCollectionMarker.Visit);
+
+            //queryModel.TransformExpressions(correlatedCollectionMarker.Visit);
         }
+
+        //private class CorrelatedCollectionMarkingQueryModelVisitor : QueryModelVisitorBase
+        //{
+        //    private CorrelatedCollectionMarkingExpressionVisitor _correlatedCollectionMarkingExpressionVisitor;
+
+        //    public CorrelatedCollectionMarkingQueryModelVisitor(EntityQueryModelVisitor queryModelVisitor)
+        //    {
+        //        _correlatedCollectionMarkingExpressionVisitor = new CorrelatedCollectionMarkingExpressionVisitor(queryModelVisitor);
+        //    }
+
+        //    public override void VisitMainFromClause(MainFromClause fromClause, QueryModel queryModel)
+        //    {
+        //    }
+
+        //    public override void VisitAdditionalFromClause(AdditionalFromClause fromClause, QueryModel queryModel, int index)
+        //    {
+        //    }
+
+        //    protected override void VisitBodyClauses(ObservableCollection<IBodyClause> bodyClauses, QueryModel queryModel)
+        //    {
+        //    }
+
+        //    public override void VisitResultOperator(ResultOperatorBase resultOperator, QueryModel queryModel, int index)
+        //    {
+        //    }
+
+        //    public override void VisitSelectClause(SelectClause selectClause, QueryModel queryModel)
+        //    {
+        //        _correlatedCollectionMarkingExpressionVisitor.Visit(selectClause.Selector);
+        //    }
+        //}
 
         private class CorrelatedCollectionMarkingExpressionVisitor : RelinqExpressionVisitor
         {
@@ -2266,17 +2300,6 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                 return base.VisitMethodCall(node);
             }
 
-
-
-
-
-
-
-
-
-
-
-
             // todo: dry
             private class QuerySourceReferenceFindingExpressionTreeVisitor : RelinqExpressionVisitor
             {
@@ -2294,7 +2317,86 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
             }
 
 
+            private class IsTranslatableExpressionVerifier : RelinqExpressionVisitor
+            {
+                private MainFromClause _mainFromClause;
 
+                public IsTranslatableExpressionVerifier(MainFromClause mainFromClause)
+                {
+                    _mainFromClause = mainFromClause;
+                }
+
+                public bool IsTranslatable { get; private set; } = true;
+
+                public override Expression Visit(Expression node)
+                {
+                    if (node is QuerySourceReferenceExpression
+                        || node is MemberExpression
+                        || node is MethodCallExpression
+                        || node is NewExpression)
+                    {
+                        return base.Visit(node);
+                    }
+                    else
+                    {
+                        IsTranslatable = false;
+
+                        return node;
+                    }
+                }
+
+                protected override Expression VisitQuerySourceReference(QuerySourceReferenceExpression querySourceReferenceExpression)
+                {
+                    if (IsTranslatable && querySourceReferenceExpression.ReferencedQuerySource != _mainFromClause)
+                    {
+                        IsTranslatable = false;
+                    }
+
+                    return querySourceReferenceExpression;
+                }
+
+                protected override Expression VisitMember(MemberExpression node)
+                {
+                    if (node.Expression is QuerySourceReferenceExpression)
+                    {
+                        Visit(node.Expression);
+                    }
+                    else
+                    {
+                        IsTranslatable = false;
+                    }
+
+                    // TODO: assume all members are translatable? or maybe only do it for entity types (i.e. check the property in metadata)
+
+                    return node;
+                }
+
+                protected override Expression VisitMethodCall(MethodCallExpression node)
+                {
+                    if (node.IsEFProperty())
+                    {
+                        Visit(node.Arguments[0]);
+                    }
+                    else
+                    {
+                        IsTranslatable = false;
+                    }
+
+                    // TODO: assume all members are translatable? or maybe only do it for entity types (i.e. check the property in metadata)
+
+                    return node;
+                }
+
+                protected override Expression VisitNew(NewExpression expression)
+                {
+                    foreach (var argument in expression.Arguments)
+                    {
+                        Visit(argument);
+                    }
+
+                    return expression;
+                }
+            }
 
             protected override Expression VisitSubQuery(SubQueryExpression expression)
             {
@@ -2302,13 +2404,9 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                 if (subQueryModel.ResultOperators.Count == 0 // TODO: Distinct?
                     && subQueryModel.SelectClause.Selector is QuerySourceReferenceExpression selectorQsre
                     && selectorQsre.ReferencedQuerySource == subQueryModel.MainFromClause)
-                    //&& (subQueryModel.MainFromClause.FromExpression is MemberExpression fromMemberExpression
-                    //|| subQueryModel.MainFromClause.FromExpression is MethodCallExpression methodCallExpression
-                    //)
                 {
                     var newExpression = _queryModelVisitor.BindNavigationPathPropertyExpression(
                         subQueryModel.MainFromClause.FromExpression,
-                        //fromMemberExpression,
                         (properties, querySource) =>
                         {
                             var collectionNavigation = properties.OfType<INavigation>().SingleOrDefault(n => n.IsCollection());
@@ -2326,6 +2424,14 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
 
                 if (subQueryModel.ResultOperators.Count == 0)
                 {
+
+                    // TODO is it still needed or can we translate everything as long as its in projection only?
+                    //var isTranslatableSelector = new IsTranslatableExpressionVerifier(subQueryModel.MainFromClause);
+                    //isTranslatableSelector.Visit(subQueryModel.SelectClause.Selector);
+
+
+                    //if (isTranslatableSelector.IsTranslatable)
+
                     var querySourceReferenceFindingExpressionTreeVisitor
                         = new QuerySourceReferenceFindingExpressionTreeVisitor();
 
